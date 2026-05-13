@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  avatar    String?
+  provider  String   // 'google' or 'yandex'
+  providerId String  @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions Transaction[]
+  preferences  UserPreferences?
+
+  @@map("users")
+}
+
+model Transaction {
+  id         String   @id @default(cuid())
+  userId     String
+  amount     Float
+  currency   String   @default("EUR")
+  date       DateTime
+  merchant   String
+  categoryId String?
+  confidence Float?   // OCR confidence score (0-100)
+  imageUrl   String?
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category? @relation(fields: [categoryId], references: [id])
+
+  @@index([userId])
+  @@index([date])
+  @@index([categoryId])
+  @@map("transactions")
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  nameRu      String   // Russian name for UI
+  icon        String   // Tabler icon name (e.g., 'shopping-cart')
+  color       String   // Hex color code
+  bgColor     String   // Background color for UI
+  type        String   // 'expense' or 'income'
+  keywords    String[] // Keywords for auto-categorization
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  transactions Transaction[]
+
+  @@map("categories")
+}
+
+model UserPreferences {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  defaultCurrency String   @default("EUR")
+  budgetLimits    Json?    // { "groceries": 500, "transport": 200, ... }
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
