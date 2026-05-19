@@ -15,7 +15,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
         callbackURL: process.env.GOOGLE_CALLBACK_URL || '/api/auth/google/callback',
       },
-      async (accessToken, refreshToken, profile, done) => {
+      async (_accessToken, _refreshToken, profile, done) => {
         try {
           const oauthProfile: OAuthProfile = {
             id: profile.id,
@@ -60,7 +60,7 @@ if (process.env.YANDEX_CLIENT_ID && process.env.YANDEX_CLIENT_SECRET) {
         clientSecret: process.env.YANDEX_CLIENT_SECRET,
         callbackURL: process.env.YANDEX_CALLBACK_URL || '/api/auth/yandex/callback',
       },
-      async (accessToken: string, refreshToken: string, profile: any, done: any) => {
+      async (_accessToken: string, _refreshToken: string, profile: any, done: any) => {
         try {
           const oauthProfile: OAuthProfile = {
             id: profile.id,

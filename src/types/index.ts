@@ -1,5 +1,3 @@
-import { Request } from 'express';
-
 export interface AuthUser {
   id: string;
   email: string;
@@ -8,8 +6,10 @@ export interface AuthUser {
   provider: string;
 }
 
-export interface AuthRequest extends Request {
-  user?: AuthUser;
+declare global {
+  namespace Express {
+    interface User extends AuthUser {}
+  }
 }
 
 export interface OAuthProfile {

@@ -1,30 +1,26 @@
-import { Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-import { AuthRequest } from '../types';
+import { Request, Response } from "express";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// Get all categories
-export const getCategories = async (req: AuthRequest, res: Response) => {
+export const getCategories = async (req: Request, res: Response) => {
   try {
-    const { type } = req.query; // 'income' or 'expense'
-
+    const { type } = req.query;
     const where = type ? { type: type as string } : {};
 
     const categories = await prisma.category.findMany({
       where,
-      orderBy: { name: 'asc' },
+      orderBy: { name: "asc" },
     });
 
     res.json(categories);
   } catch (error) {
-    console.error('Get categories error:', error);
-    res.status(500).json({ error: 'Failed to fetch categories' });
+    console.error("Get categories error:", error);
+    res.status(500).json({ error: "Failed to fetch categories" });
   }
 };
 
-// Get single category
-export const getCategory = async (req: AuthRequest, res: Response) => {
+export const getCategory = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -33,35 +29,29 @@ export const getCategory = async (req: AuthRequest, res: Response) => {
     });
 
     if (!category) {
-      return res.status(404).json({ error: 'Category not found' });
+      res.status(404).json({ error: "Category not found" });
+      return;
     }
 
     res.json(category);
   } catch (error) {
-    console.error('Get category error:', error);
-    res.status(500).json({ error: 'Failed to fetch category' });
+    console.error("Get category error:", error);
+    res.status(500).json({ error: "Failed to fetch category" });
   }
 };
 
-// Auto-categorize based on merchant name
-export const suggestCategory = async (req: AuthRequest, res: Response) => {
+export const suggestCategory = async (req: Request, res: Response) => {
   try {
     const { merchant } = req.body;
 
     if (!merchant) {
-      return res.status(400).json({ error: 'Merchant name is required' });
+      res.status(400).json({ error: "Merchant name is required" });
+      return;
     }
 
     const merchantLower = merchant.toLowerCase();
 
-    // Find matching category by keywords
-    const categories = await prisma.category.findMany({
-      where: {
-        keywords: {
-          hasSome: [], // Get all to filter in JS
-        },
-      },
-    });
+    const categories = await prisma.category.findMany();
 
     let bestMatch = null;
     let highestConfidence = 0;
@@ -69,7 +59,6 @@ export const suggestCategory = async (req: AuthRequest, res: Response) => {
     for (const category of categories) {
       for (const keyword of category.keywords) {
         if (merchantLower.includes(keyword.toLowerCase())) {
-          // Simple confidence: longer keyword = higher confidence
           const confidence = Math.min(95, 70 + keyword.length * 2);
           if (confidence > highestConfidence) {
             highestConfidence = confidence;
@@ -80,23 +69,17 @@ export const suggestCategory = async (req: AuthRequest, res: Response) => {
     }
 
     if (bestMatch) {
-      res.json({
-        category: bestMatch,
-        confidence: highestConfidence,
-      });
-    } else {
-      // Default to 'other_expense' or 'other_income'
-      const defaultCategory = await prisma.category.findFirst({
-        where: { name: 'other_expense' },
-      });
-      
-      res.json({
-        category: defaultCategory,
-        confidence: 30,
-      });
+      res.json({ category: bestMatch, confidence: highestConfidence });
+      return;
     }
+
+    const defaultCategory = await prisma.category.findFirst({
+      where: { name: "other_expense" },
+    });
+
+    res.json({ category: defaultCategory, confidence: 30 });
   } catch (error) {
-    console.error('Suggest category error:', error);
-    res.status(500).json({ error: 'Failed to suggest category' });
+    console.error("Suggest category error:", error);
+    res.status(500).json({ error: "Failed to suggest category" });
   }
 };

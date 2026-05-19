@@ -1,21 +1,21 @@
-import { Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-import { AuthRequest, TransactionInput } from '../types';
+import { Request, Response } from 'express';
+import { PrismaClient, Prisma, Category } from '@prisma/client';
+import { TransactionInput } from '../types';
 
 const prisma = new PrismaClient();
 
-// Get all transactions for user
-export const getTransactions = async (req: AuthRequest, res: Response) => {
+export const getTransactions = async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const { startDate, endDate, categoryId, limit = 100, offset = 0 } = req.query;
 
-    const where: any = { userId };
+    const where: Prisma.TransactionWhereInput = { userId };
 
     if (startDate || endDate) {
-      where.date = {};
-      if (startDate) where.date.gte = new Date(startDate as string);
-      if (endDate) where.date.lte = new Date(endDate as string);
+      where.date = {
+        ...(startDate && { gte: new Date(startDate as string) }),
+        ...(endDate && { lte: new Date(endDate as string) }),
+      };
     }
 
     if (categoryId) {
@@ -24,9 +24,7 @@ export const getTransactions = async (req: AuthRequest, res: Response) => {
 
     const transactions = await prisma.transaction.findMany({
       where,
-      include: {
-        category: true,
-      },
+      include: { category: true },
       orderBy: { date: 'desc' },
       take: Number(limit),
       skip: Number(offset),
@@ -36,11 +34,7 @@ export const getTransactions = async (req: AuthRequest, res: Response) => {
 
     res.json({
       transactions,
-      pagination: {
-        total,
-        limit: Number(limit),
-        offset: Number(offset),
-      },
+      pagination: { total, limit: Number(limit), offset: Number(offset) },
     });
   } catch (error) {
     console.error('Get transactions error:', error);
@@ -48,8 +42,7 @@ export const getTransactions = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// Get single transaction
-export const getTransaction = async (req: AuthRequest, res: Response) => {
+export const getTransaction = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const userId = req.user!.id;
@@ -60,7 +53,8 @@ export const getTransaction = async (req: AuthRequest, res: Response) => {
     });
 
     if (!transaction) {
-      return res.status(404).json({ error: 'Transaction not found' });
+      res.status(404).json({ error: 'Transaction not found' });
+      return;
     }
 
     res.json(transaction);
@@ -70,8 +64,7 @@ export const getTransaction = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// Create transaction
-export const createTransaction = async (req: AuthRequest, res: Response) => {
+export const createTransaction = async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const data: TransactionInput = req.body;
@@ -98,20 +91,17 @@ export const createTransaction = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// Update transaction
-export const updateTransaction = async (req: AuthRequest, res: Response) => {
+export const updateTransaction = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const userId = req.user!.id;
     const data: Partial<TransactionInput> = req.body;
 
-    // Check if transaction exists and belongs to user
-    const existing = await prisma.transaction.findFirst({
-      where: { id, userId },
-    });
+    const existing = await prisma.transaction.findFirst({ where: { id, userId } });
 
     if (!existing) {
-      return res.status(404).json({ error: 'Transaction not found' });
+      res.status(404).json({ error: 'Transaction not found' });
+      return;
     }
 
     const transaction = await prisma.transaction.update({
@@ -136,19 +126,16 @@ export const updateTransaction = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// Delete transaction
-export const deleteTransaction = async (req: AuthRequest, res: Response) => {
+export const deleteTransaction = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const userId = req.user!.id;
 
-    // Check if transaction exists and belongs to user
-    const existing = await prisma.transaction.findFirst({
-      where: { id, userId },
-    });
+    const existing = await prisma.transaction.findFirst({ where: { id, userId } });
 
     if (!existing) {
-      return res.status(404).json({ error: 'Transaction not found' });
+      res.status(404).json({ error: 'Transaction not found' });
+      return;
     }
 
     await prisma.transaction.delete({ where: { id } });
@@ -160,18 +147,20 @@ export const deleteTransaction = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// Get statistics
-export const getStatistics = async (req: AuthRequest, res: Response) => {
+type CategoryStat = { category: Category; total: number; count: number };
+
+export const getStatistics = async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const { startDate, endDate } = req.query;
 
-    const where: any = { userId };
+    const where: Prisma.TransactionWhereInput = { userId };
 
     if (startDate || endDate) {
-      where.date = {};
-      if (startDate) where.date.gte = new Date(startDate as string);
-      if (endDate) where.date.lte = new Date(endDate as string);
+      where.date = {
+        ...(startDate && { gte: new Date(startDate as string) }),
+        ...(endDate && { lte: new Date(endDate as string) }),
+      };
     }
 
     const transactions = await prisma.transaction.findMany({
@@ -180,31 +169,25 @@ export const getStatistics = async (req: AuthRequest, res: Response) => {
     });
 
     const totalIncome = transactions
-      .filter(t => t.amount > 0)
+      .filter((t) => t.amount > 0)
       .reduce((sum, t) => sum + t.amount, 0);
 
     const totalExpense = transactions
-      .filter(t => t.amount < 0)
+      .filter((t) => t.amount < 0)
       .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
     const balance = totalIncome - totalExpense;
 
-    // Group by category
-    const byCategory = transactions.reduce((acc, t) => {
+    const byCategory = transactions.reduce<Record<string, CategoryStat>>((acc, t) => {
       if (!t.category) return acc;
-      
       const key = t.category.id;
       if (!acc[key]) {
-        acc[key] = {
-          category: t.category,
-          total: 0,
-          count: 0,
-        };
+        acc[key] = { category: t.category, total: 0, count: 0 };
       }
       acc[key].total += Math.abs(t.amount);
       acc[key].count += 1;
       return acc;
-    }, {} as any);
+    }, {});
 
     res.json({
       totalIncome,
