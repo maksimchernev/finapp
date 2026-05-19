@@ -1,17 +1,17 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import dotenv from 'dotenv';
 import passport from 'passport';
+
 import authRoutes from './routes/auth.routes';
 import transactionRoutes from './routes/transaction.routes';
 import categoryRoutes from './routes/category.routes';
 import userRoutes from './routes/user.routes';
+
 import { errorHandler } from './middleware/error.middleware';
 import './services/passport.service'; // Initialize passport strategies
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -28,7 +28,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 
 // Health check
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
