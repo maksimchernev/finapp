@@ -30,7 +30,7 @@ model Transaction {
   id         String   @id @default(cuid())
   userId     String
   amount     Float
-  currency   String   @default("EUR")
+  currency   String   @default("RUB")
   date       DateTime
   merchant   String
   categoryId String?

@@ -69,6 +69,16 @@ export const createTransaction = async (req: Request, res: Response) => {
     const userId = req.user!.id;
     const data: TransactionInput = req.body;
 
+    const categoryId = data.categoryId || undefined;
+
+    if (categoryId) {
+      const category = await prisma.category.findUnique({ where: { id: categoryId } });
+      if (!category) {
+        res.status(400).json({ error: 'Category not found' });
+        return;
+      }
+    }
+
     const transaction = await prisma.transaction.create({
       data: {
         userId,
@@ -76,7 +86,7 @@ export const createTransaction = async (req: Request, res: Response) => {
         currency: data.currency || 'EUR',
         date: new Date(data.date),
         merchant: data.merchant,
-        categoryId: data.categoryId,
+        categoryId,
         confidence: data.confidence,
         imageUrl: data.imageUrl,
         notes: data.notes,
