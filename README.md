@@ -51,7 +51,7 @@ DATABASE_URL="postgresql://postgres:password@localhost:5432/finance_tracker?sche
 JWT_SECRET=your-super-secret-jwt-key-change-this
 
 # Frontend URL
-FRONTEND_URL=http://localhost:5173
+FRONTEND_URL=http://localhost:3002
 
 # Google OAuth (получите на https://console.cloud.google.com)
 GOOGLE_CLIENT_ID=your-google-client-id

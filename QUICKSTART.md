@@ -139,7 +139,7 @@ curl http://localhost:3001/api/categories \
 http://localhost:3001/api/auth/google
 
 # После авторизации вас перенаправит на:
-http://localhost:5173/auth/callback?token=eyJhbGc...
+http://localhost:3002/auth/callback?token=eyJhbGc...
 
 # Используйте этот токен для API запросов
 ```
@@ -207,7 +207,7 @@ npm run prisma:generate
 npm run prisma:migrate
 ```
 
-**OAuth редиректит на localhost:5173**
+**OAuth редиректит на localhost:3002**
 ```bash
 # Измените FRONTEND_URL в .env
 FRONTEND_URL=http://localhost:3000  # или ваш порт
