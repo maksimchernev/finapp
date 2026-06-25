@@ -16,12 +16,36 @@ import "./services/passport.service"; // Initialize passport strategies
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+function getConfiguredCorsOrigins() {
+  return [
+    process.env.FRONTEND_URL || "http://localhost:3002",
+    ...(process.env.CORS_ORIGINS?.split(",") ?? []),
+  ]
+    .map((origin) => origin?.trim())
+    .filter((origin): origin is string => Boolean(origin));
+}
+
+function isAllowedCorsOrigin(origin?: string) {
+  if (!origin) return true;
+
+  return getConfiguredCorsOrigins().includes(origin);
+}
+
 // Middleware
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3002",
+    origin: (origin, callback) => {
+      if (isAllowedCorsOrigin(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error(`CORS origin is not allowed: ${origin}`));
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
 app.use(morgan("dev"));
