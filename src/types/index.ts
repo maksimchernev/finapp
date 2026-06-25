@@ -27,13 +27,13 @@ export interface JWTPayload {
 }
 
 export interface TransactionInput {
-  amount: number;
+  amountMinor: number;
   currency?: string;
   date: string | Date;
   merchant: string;
-  categoryId?: string;
+  categoryId?: string | null;
   confidence?: number;
-  imageUrl?: string;
+  sourceType?: 'screenshot' | 'manual' | 'statement';
   notes?: string;
 }
 

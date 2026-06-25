@@ -30,9 +30,6 @@ Thumbs.db
 *.swo
 *~
 
-# Prisma
-prisma/migrations/
-
 # Uploads
 uploads/
 *.jpg

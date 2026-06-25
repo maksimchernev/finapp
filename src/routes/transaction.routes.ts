@@ -8,17 +8,24 @@ import {
   deleteTransaction,
   getStatistics,
 } from '../controllers/transaction.controller';
+import {
+  createTransactionValidators,
+  transactionIdValidators,
+  transactionListValidators,
+  transactionStatisticsValidators,
+  updateTransactionValidators,
+} from '../validators/transaction.validators';
 
 const router = Router();
 
 // All routes require authentication
 router.use(authenticate);
 
-router.get('/', getTransactions);
-router.get('/statistics', getStatistics);
-router.get('/:id', getTransaction);
-router.post('/', createTransaction);
-router.patch('/:id', updateTransaction);
-router.delete('/:id', deleteTransaction);
+router.get('/', transactionListValidators, getTransactions);
+router.get('/statistics', transactionStatisticsValidators, getStatistics);
+router.get('/:id', transactionIdValidators, getTransaction);
+router.post('/', createTransactionValidators, createTransaction);
+router.patch('/:id', updateTransactionValidators, updateTransaction);
+router.delete('/:id', transactionIdValidators, deleteTransaction);
 
 export default router;
