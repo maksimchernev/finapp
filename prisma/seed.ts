@@ -75,6 +75,16 @@ const categories = [
     isDefault: true,
   },
   {
+    name: 'loans',
+    nameRu: 'Кредиты',
+    icon: 'credit-card',
+    color: '#8B5E34',
+    bgColor: '#F3E8DA',
+    type: 'expense',
+    keywords: ['погашение кредита', 'платеж по кредиту', 'ипотека', 'заём', 'займ', 'loan'],
+    isDefault: true,
+  },
+  {
     name: 'other_expense',
     nameRu: 'Прочие расходы',
     icon: 'dots',

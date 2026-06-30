@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth.middleware';
-import { getProfile, updatePreferences } from '../controllers/user.controller';
+import { getProfile, updatePreferences, updateProfile } from '../controllers/user.controller';
+import { updateProfileValidators } from '../validators/user.validators';
 
 const router = Router();
 
@@ -8,6 +9,7 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/profile', getProfile);
+router.patch('/profile', updateProfileValidators, updateProfile);
 router.patch('/preferences', updatePreferences);
 
 export default router;

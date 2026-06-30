@@ -1,0 +1,1 @@
+ALTER TABLE "banks" ADD COLUMN "keywords" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];

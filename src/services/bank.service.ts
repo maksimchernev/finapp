@@ -6,15 +6,25 @@ export function normalizeBankName(name: string) {
   return name.trim().replace(/\s+/g, " ").toLowerCase();
 }
 
+export function normalizeBankDisplayName(name: string) {
+  return name.trim().replace(/\s+/g, " ");
+}
+
+export function normalizeBankKeywords(keywords: string[] = []) {
+  return [...new Set(keywords.map(normalizeBankName).filter(Boolean))];
+}
+
 export function toBankCreateData(
   userId: string,
   name: string,
+  keywords: string[] = [],
 ): Prisma.BankUncheckedCreateInput {
-  const trimmedName = name.trim().replace(/\s+/g, " ");
+  const trimmedName = normalizeBankDisplayName(name);
   return {
     userId,
     name: trimmedName,
     normalizedName: normalizeBankName(trimmedName),
+    keywords: normalizeBankKeywords([trimmedName, ...keywords]),
   };
 }
 
@@ -29,17 +39,59 @@ export async function createUserBank(
   prisma: BankPrisma,
   userId: string,
   name: string,
+  keywords: string[] = [],
 ) {
-  const data = toBankCreateData(userId, name);
-  return prisma.bank.upsert({
+  const nextData = toBankCreateData(userId, name, keywords);
+  const nextKeywords = normalizeBankKeywords([name, ...keywords]);
+  const existingBank = await prisma.bank.findUnique({
     where: {
       userId_normalizedName: {
         userId,
-        normalizedName: data.normalizedName,
+        normalizedName: nextData.normalizedName,
       },
     },
-    create: data,
-    update: { name: data.name },
+  });
+
+  if (!existingBank) {
+    return prisma.bank.create({ data: nextData });
+  }
+
+  return prisma.bank.update({
+    where: { id: existingBank.id },
+    data: {
+      name: nextData.name,
+      keywords: normalizeBankKeywords([
+        ...existingBank.keywords,
+        ...nextKeywords,
+      ]),
+    },
+  });
+}
+
+export async function updateUserBank(
+  prisma: BankPrisma,
+  userId: string,
+  bankId: string,
+  data: { name: string; keywords: string[] },
+) {
+  const existingBank = await prisma.bank.findFirst({
+    where: { id: bankId, userId },
+    select: { id: true },
+  });
+
+  if (!existingBank) {
+    return null;
+  }
+
+  const name = normalizeBankDisplayName(data.name);
+
+  return prisma.bank.update({
+    where: { id: bankId },
+    data: {
+      keywords: normalizeBankKeywords(data.keywords),
+      name,
+      normalizedName: normalizeBankName(name),
+    },
   });
 }
 
