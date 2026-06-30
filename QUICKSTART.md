@@ -38,7 +38,7 @@ npm run dev
 
 ```bash
 # Откройте Prisma Studio
-npm run prisma:studio
+npm run studio
 ```
 
 1. Перейдите в таблицу `users`
@@ -55,26 +55,10 @@ npm run prisma:studio
 
 ### Вариант 2: Создать JWT токен вручную
 
-Создайте файл `generate-token.js`:
+Вставьте нужный `userId` в `test.ts`, затем запустите:
 
-```javascript
-const jwt = require('jsonwebtoken');
-
-const payload = {
-  userId: 'USER_ID_FROM_PRISMA',  // Замените на реальный ID
-  email: 'test@example.com'
-};
-
-const token = jwt.sign(payload, 'your-super-secret-jwt-key-change-this', { 
-  expiresIn: '7d' 
-});
-
-console.log('JWT Token:', token);
-```
-
-Запустите:
 ```bash
-node generate-token.js
+npm run token
 ```
 
 ### Использование токена
@@ -174,7 +158,7 @@ prisma/
 npm run dev              # Запуск с hot-reload
 
 # База данных
-npm run prisma:studio    # UI для БД (localhost:5555)
+npm run studio           # UI для БД (localhost:5555)
 npm run prisma:migrate   # Применить миграции
 npm run prisma:seed      # Заполнить категориями
 

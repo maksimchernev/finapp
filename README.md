@@ -199,7 +199,7 @@ curl -X POST http://localhost:3001/api/categories/suggest \
 ### Prisma Studio (UI для БД)
 
 ```bash
-npm run prisma:studio
+npm run studio
 ```
 
 Откроется на `http://localhost:5555`

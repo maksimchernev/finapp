@@ -121,18 +121,15 @@ const categories = [
 async function main() {
   console.log('🌱 Seeding database...');
 
-  // Clear existing categories
-  await prisma.category.deleteMany({});
-  console.log('✅ Cleared existing categories');
-
-  // Create categories
   for (const category of categories) {
-    await prisma.category.create({
-      data: category,
+    await prisma.category.upsert({
+      where: { name: category.name },
+      create: category,
+      update: category,
     });
   }
 
-  console.log(`✅ Created ${categories.length} categories`);
+  console.log(`✅ Upserted ${categories.length} categories`);
   console.log('🎉 Seeding complete!');
 }
 

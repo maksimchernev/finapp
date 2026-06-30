@@ -1,19 +1,21 @@
-// generate-token.js
 import "dotenv/config";
 import jwt from "jsonwebtoken";
 
 // Вставьте userId который скопировали из Prisma Studio
-const userId = "cmpcd4eoj00006cl0ovaym0lo"; // ← ЗАМЕНИТЕ НА СВОЙ ID
+const userId = "cmquo2lve0000uofl6unnpa0t"; // ← ЗАМЕНИТЕ НА СВОЙ ID
 
 const payload = {
   userId: userId,
   email: "test@example.com",
 };
 
-// SECRET из .env
-console.log({ w: process.env.JWT_SECRET });
-
 const SECRET = process.env.JWT_SECRET ?? "";
+
+if (!SECRET) {
+  throw new Error(
+    "JWT_SECRET is not set. Add it to .env or pass it before running this script.",
+  );
+}
 
 const token = jwt.sign(payload, SECRET, {
   expiresIn: "7d",

@@ -4,14 +4,20 @@
   "description": "Backend API for Finance Tracker with OAuth and Tesseract OCR",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "nodemon --watch src --ext ts --exec tsx src/index.ts",
+    "dev": "nodemon --watch src --watch .env --ext ts,env --exec tsx src/index.ts",
     "build": "tsc",
     "test": "tsx --test \"test/**/*.test.ts\"",
+    "token": "tsx test.ts",
     "start": "node dist/index.js",
     "prisma:generate": "prisma generate",
+    "prisma:deploy": "prisma migrate deploy",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio",
+    "prisma:studio": "node --env-file=.env ./node_modules/prisma/build/index.js studio --schema prisma/schema.prisma",
+    "studio": "node --env-file=.env ./node_modules/prisma/build/index.js studio --schema prisma/schema.prisma",
     "prisma:seed": "tsx prisma/seed.ts"
+  },
+  "engines": {
+    "node": ">=22 <23"
   },
   "keywords": [
     "finance",
