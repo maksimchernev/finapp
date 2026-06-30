@@ -62,6 +62,14 @@ const categoryIdRule = body("categoryId")
   .isLength({ min: 1, max: 128 })
   .withMessage("categoryId must be between 1 and 128 characters");
 
+const bankIdRule = body("bankId")
+  .optional({ values: "null" })
+  .isString()
+  .withMessage("bankId must be a string")
+  .bail()
+  .isLength({ min: 1, max: 128 })
+  .withMessage("bankId must be between 1 and 128 characters");
+
 const confidenceRule = body("confidence")
   .optional({ values: "null" })
   .isFloat({ min: 0, max: 100 })
@@ -107,6 +115,7 @@ export const createTransactionValidators = [
   dateRule,
   merchantRule,
   categoryIdRule,
+  bankIdRule,
   confidenceRule,
   sourceTypeRule,
   notesRule,
@@ -120,6 +129,7 @@ export const updateTransactionValidators = [
   optionalDateRule,
   optionalMerchantRule,
   categoryIdRule,
+  bankIdRule,
   confidenceRule,
   sourceTypeRule,
   notesRule,

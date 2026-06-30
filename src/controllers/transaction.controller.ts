@@ -10,6 +10,7 @@ import {
   listUserTransactions,
   updateUserTransaction,
 } from '../services/transaction.service';
+import { userBankExists } from '../services/bank.service';
 
 const prisma = new PrismaClient();
 
@@ -70,6 +71,11 @@ export const createTransaction = async (req: Request, res: Response) => {
       return;
     }
 
+    if (!(await userBankExists(prisma, userId, data.bankId))) {
+      res.status(400).json({ error: 'Bank not found' });
+      return;
+    }
+
     const transaction = await createUserTransaction(prisma, userId, data);
 
     res.status(201).json(transaction);
@@ -87,6 +93,11 @@ export const updateTransaction = async (req: Request, res: Response) => {
 
     if (!(await categoryExists(prisma, data.categoryId))) {
       res.status(400).json({ error: 'Category not found' });
+      return;
+    }
+
+    if (!(await userBankExists(prisma, userId, data.bankId))) {
+      res.status(400).json({ error: 'Bank not found' });
       return;
     }
 

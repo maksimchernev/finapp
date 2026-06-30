@@ -128,7 +128,7 @@ test("listing transactions returns only the current user's rows", async () => {
     [
       {
         where: { userId: "user-a" },
-        include: { category: true },
+        include: { bank: true, category: true },
         orderBy: { date: "desc" },
         take: 100,
         skip: 0,

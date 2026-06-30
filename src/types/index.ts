@@ -32,6 +32,7 @@ export interface TransactionInput {
   date: string | Date;
   merchant: string;
   categoryId?: string | null;
+  bankId?: string | null;
   confidence?: number;
   sourceType?: 'screenshot' | 'manual' | 'statement';
   notes?: string;

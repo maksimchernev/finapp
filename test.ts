@@ -2,7 +2,7 @@ import "dotenv/config";
 import jwt from "jsonwebtoken";
 
 // Вставьте userId который скопировали из Prisma Studio
-const userId = "cmquo2lve0000uofl6unnpa0t"; // ← ЗАМЕНИТЕ НА СВОЙ ID
+const userId = "cmpcd4eoj00006cl0ovaym0lo"; // ← ЗАМЕНИТЕ НА СВОЙ ID
 
 const payload = {
   userId: userId,

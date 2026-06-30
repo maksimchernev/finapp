@@ -9,6 +9,7 @@ import authRoutes from "./routes/auth.routes";
 import transactionRoutes from "./routes/transaction.routes";
 import categoryRoutes from "./routes/category.routes";
 import userRoutes from "./routes/user.routes";
+import bankRoutes from "./routes/bank.routes";
 
 import { errorHandler } from "./middleware/error.middleware";
 import "./services/passport.service"; // Initialize passport strategies
@@ -67,6 +68,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/banks", bankRoutes);
 
 // 404 handler
 app.use("*", (req, res) => {

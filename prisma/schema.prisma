@@ -22,6 +22,7 @@ model User {
 
   transactions Transaction[]
   preferences  UserPreferences?
+  banks        Bank[]
 
   @@map("users")
 }
@@ -34,6 +35,7 @@ model Transaction {
   date       DateTime
   merchant   String
   categoryId String?
+  bankId     String?
   confidence Float?   // OCR confidence score (0-100)
   sourceType String   @default("screenshot") // screenshot, manual, statement
   notes      String?
@@ -42,12 +44,30 @@ model Transaction {
 
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   category Category? @relation(fields: [categoryId], references: [id])
+  bank     Bank?     @relation(fields: [bankId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([userId, date])
   @@index([date])
   @@index([categoryId])
+  @@index([bankId])
   @@map("transactions")
+}
+
+model Bank {
+  id             String   @id @default(cuid())
+  userId         String
+  name           String
+  normalizedName String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@unique([userId, normalizedName])
+  @@index([userId])
+  @@map("banks")
 }
 
 model Category {

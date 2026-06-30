@@ -1,7 +1,7 @@
 import { Category, Prisma, PrismaClient } from "@prisma/client";
 import { TransactionInput } from "../types";
 
-export type TransactionPrisma = Pick<PrismaClient, "transaction" | "category">;
+export type TransactionPrisma = Pick<PrismaClient, "transaction" | "category" | "bank">;
 
 export type TransactionListFilters = {
   startDate?: string;
@@ -66,7 +66,7 @@ export async function listUserTransactions(
   const [transactions, total] = await Promise.all([
     prisma.transaction.findMany({
       where,
-      include: { category: true },
+      include: { bank: true, category: true },
       orderBy: { date: "desc" },
       take: pagination.limit,
       skip: pagination.offset,
@@ -88,6 +88,7 @@ export function toTransactionCreateData(
     date: new Date(data.date),
     merchant: data.merchant,
     categoryId: data.categoryId || undefined,
+    bankId: data.bankId || undefined,
     confidence: data.confidence,
     sourceType: data.sourceType || "screenshot",
     notes: data.notes,
@@ -103,6 +104,7 @@ export function toTransactionUpdateData(
     ...(data.date && { date: new Date(data.date) }),
     ...(data.merchant && { merchant: data.merchant }),
     ...(data.categoryId !== undefined && { categoryId: data.categoryId }),
+    ...(data.bankId !== undefined && { bankId: data.bankId }),
     ...(data.confidence !== undefined && { confidence: data.confidence }),
     ...(data.sourceType && { sourceType: data.sourceType }),
     ...(data.notes !== undefined && { notes: data.notes }),
@@ -116,7 +118,7 @@ export async function createUserTransaction(
 ) {
   return prisma.transaction.create({
     data: toTransactionCreateData(userId, data),
-    include: { category: true },
+    include: { bank: true, category: true },
   });
 }
 
@@ -127,7 +129,7 @@ export async function findUserTransaction(
 ) {
   return prisma.transaction.findFirst({
     where: buildUserTransactionIdentity(userId, transactionId),
-    include: { category: true },
+    include: { bank: true, category: true },
   });
 }
 
@@ -147,7 +149,7 @@ export async function updateUserTransaction(
   return prisma.transaction.update({
     where: { id: transactionId },
     data: toTransactionUpdateData(data),
-    include: { category: true },
+    include: { bank: true, category: true },
   });
 }
 
@@ -180,7 +182,7 @@ export async function getUserTransactionStatistics(
 ) {
   const transactions = await prisma.transaction.findMany({
     where: buildUserTransactionWhere(userId, filters),
-    include: { category: true },
+    include: { bank: true, category: true },
   });
 
   const totalIncomeMinor = transactions
