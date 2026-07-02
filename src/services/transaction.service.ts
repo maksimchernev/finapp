@@ -43,12 +43,16 @@ export function buildUserTransactionIdentity(
 
 export async function categoryExists(
   prisma: TransactionPrisma,
+  userId: string,
   categoryId: string | null | undefined,
 ) {
   if (!categoryId) return true;
 
-  const category = await prisma.category.findUnique({
-    where: { id: categoryId },
+  const category = await prisma.category.findFirst({
+    where: {
+      id: categoryId,
+      OR: [{ isDefault: true }, { userId }],
+    },
     select: { id: true },
   });
 

@@ -66,7 +66,7 @@ export const createTransaction = async (req: Request, res: Response) => {
     const userId = req.user!.id;
     const data: TransactionInput = req.body;
 
-    if (!(await categoryExists(prisma, data.categoryId))) {
+    if (!(await categoryExists(prisma, userId, data.categoryId))) {
       res.status(400).json({ error: 'Category not found' });
       return;
     }
@@ -91,7 +91,7 @@ export const updateTransaction = async (req: Request, res: Response) => {
     const userId = req.user!.id;
     const data: Partial<TransactionInput> = req.body;
 
-    if (!(await categoryExists(prisma, data.categoryId))) {
+    if (!(await categoryExists(prisma, userId, data.categoryId))) {
       res.status(400).json({ error: 'Category not found' });
       return;
     }

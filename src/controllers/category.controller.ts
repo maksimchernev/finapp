@@ -1,17 +1,22 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
+import {
+  createUserCategory,
+  deleteUserCategory,
+  getVisibleCategory,
+  listVisibleCategories,
+  updateUserCategory,
+} from "../services/category.service";
 
 const prisma = new PrismaClient();
 
 export const getCategories = async (req: Request, res: Response) => {
   try {
+    const userId = req.user!.id;
     const { type } = req.query;
-    const where = type ? { type: type as string } : {};
+    const categoryType = typeof type === "string" ? type : undefined;
 
-    const categories = await prisma.category.findMany({
-      where,
-      orderBy: { name: "asc" },
-    });
+    const categories = await listVisibleCategories(prisma, userId, categoryType);
 
     res.json(categories);
   } catch (error) {
@@ -22,11 +27,10 @@ export const getCategories = async (req: Request, res: Response) => {
 
 export const getCategory = async (req: Request, res: Response) => {
   try {
+    const userId = req.user!.id;
     const { id } = req.params;
 
-    const category = await prisma.category.findUnique({
-      where: { id },
-    });
+    const category = await getVisibleCategory(prisma, userId, id);
 
     if (!category) {
       res.status(404).json({ error: "Category not found" });
@@ -40,8 +44,60 @@ export const getCategory = async (req: Request, res: Response) => {
   }
 };
 
+export const createCategory = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const category = await createUserCategory(prisma, userId, req.body);
+
+    res.status(201).json(category);
+  } catch (error) {
+    console.error("Create category error:", error);
+    res.status(500).json({ error: "Failed to create category" });
+  }
+};
+
+export const updateCategory = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const category = await updateUserCategory(
+      prisma,
+      userId,
+      req.params.id,
+      req.body,
+    );
+
+    if (!category) {
+      res.status(404).json({ error: "Category not found" });
+      return;
+    }
+
+    res.json(category);
+  } catch (error) {
+    console.error("Update category error:", error);
+    res.status(500).json({ error: "Failed to update category" });
+  }
+};
+
+export const deleteCategory = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const category = await deleteUserCategory(prisma, userId, req.params.id);
+
+    if (!category) {
+      res.status(404).json({ error: "Category not found" });
+      return;
+    }
+
+    res.status(204).send();
+  } catch (error) {
+    console.error("Delete category error:", error);
+    res.status(500).json({ error: "Failed to delete category" });
+  }
+};
+
 export const suggestCategory = async (req: Request, res: Response) => {
   try {
+    const userId = req.user!.id;
     const { merchant } = req.body;
 
     if (!merchant) {
@@ -51,7 +107,7 @@ export const suggestCategory = async (req: Request, res: Response) => {
 
     const merchantLower = merchant.toLowerCase();
 
-    const categories = await prisma.category.findMany();
+    const categories = await listVisibleCategories(prisma, userId);
 
     let bestMatch = null;
     let highestConfidence = 0;
@@ -73,9 +129,9 @@ export const suggestCategory = async (req: Request, res: Response) => {
       return;
     }
 
-    const defaultCategory = await prisma.category.findFirst({
-      where: { name: "other_expense" },
-    });
+    const defaultCategory = categories.find(
+      (category) => category.name === "other_expense",
+    );
 
     res.json({ category: defaultCategory, confidence: 30 });
   } catch (error) {

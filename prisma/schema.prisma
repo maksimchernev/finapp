@@ -23,6 +23,7 @@ model User {
   transactions Transaction[]
   preferences  UserPreferences?
   banks        Bank[]
+  categories   Category[]
 
   @@map("users")
 }
@@ -73,6 +74,7 @@ model Bank {
 
 model Category {
   id          String   @id @default(cuid())
+  userId      String?
   name        String   @unique
   nameRu      String   // Russian name for UI
   icon        String   // Tabler icon name (e.g., 'shopping-cart')
@@ -83,8 +85,10 @@ model Category {
   isDefault   Boolean  @default(false)
   createdAt   DateTime @default(now())
 
+  user         User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions Transaction[]
 
+  @@index([userId])
   @@map("categories")
 }
 
