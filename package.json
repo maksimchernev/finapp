@@ -7,7 +7,6 @@
     "dev": "nodemon --watch src --watch .env --ext ts,env --exec tsx src/index.ts",
     "build": "tsc",
     "test": "tsx --test \"test/**/*.test.ts\"",
-    "token": "tsx test.ts",
     "start": "node dist/index.js",
     "prisma:generate": "prisma generate",
     "prisma:deploy": "prisma migrate deploy",

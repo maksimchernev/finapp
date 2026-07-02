@@ -30,57 +30,6 @@ npm run dev
 
 ---
 
-## Тестирование без OAuth (для разработки)
-
-Пока не настроены Google/Yandex OAuth, можно тестировать API напрямую.
-
-### Вариант 1: Создать тестового пользователя в БД
-
-```bash
-# Откройте Prisma Studio
-npm run studio
-```
-
-1. Перейдите в таблицу `users`
-2. Создайте пользователя:
-```json
-{
-  "email": "test@example.com",
-  "name": "Test User",
-  "provider": "manual",
-  "providerId": "manual_test123"
-}
-```
-3. Скопируйте `id` пользователя
-
-### Вариант 2: Создать JWT токен вручную
-
-Вставьте нужный `userId` в `test.ts`, затем запустите:
-
-```bash
-npm run token
-```
-
-### Использование токена
-
-```bash
-# Создать транзакцию
-curl -X POST http://localhost:3001/api/transactions \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "amount": -42.50,
-    "date": "2024-05-12",
-    "merchant": "Mercadona"
-  }'
-
-# Получить категории
-curl http://localhost:3001/api/categories \
-  -H "Authorization: Bearer YOUR_TOKEN"
-```
-
----
-
 ## Настройка OAuth (опционально)
 
 ### Google OAuth (5 мин)
