@@ -1,8 +1,8 @@
-import passport from 'passport';
-import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import { Strategy as YandexStrategy } from 'passport-yandex';
-import { PrismaClient } from '@prisma/client';
-import { OAuthProfile } from '../types';
+import passport from "passport";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import { Strategy as YandexStrategy } from "passport-yandex";
+import { PrismaClient } from "@prisma/client";
+import { OAuthProfile } from "../types";
 
 const prisma = new PrismaClient();
 
@@ -13,16 +13,17 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
       {
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: process.env.GOOGLE_CALLBACK_URL || '/api/auth/google/callback',
+        callbackURL:
+          process.env.GOOGLE_CALLBACK_URL || "/api/auth/google/callback",
       },
       async (_accessToken, _refreshToken, profile, done) => {
         try {
           const oauthProfile: OAuthProfile = {
             id: profile.id,
-            email: profile.emails?.[0]?.value || '',
+            email: profile.emails?.[0]?.value || "",
             name: profile.displayName,
             picture: profile.photos?.[0]?.value,
-            provider: 'google',
+            provider: "google",
           };
 
           // Find or create user
@@ -36,7 +37,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
                 email: oauthProfile.email,
                 name: oauthProfile.name,
                 avatar: oauthProfile.picture,
-                provider: 'google',
+                provider: "google",
                 providerId: `google_${oauthProfile.id}`,
               },
             });
@@ -46,8 +47,8 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
         } catch (error) {
           return done(error as Error);
         }
-      }
-    )
+      },
+    ),
   );
 }
 
@@ -58,18 +59,24 @@ if (process.env.YANDEX_CLIENT_ID && process.env.YANDEX_CLIENT_SECRET) {
       {
         clientID: process.env.YANDEX_CLIENT_ID,
         clientSecret: process.env.YANDEX_CLIENT_SECRET,
-        callbackURL: process.env.YANDEX_CALLBACK_URL || '/api/auth/yandex/callback',
+        callbackURL:
+          process.env.YANDEX_CALLBACK_URL || "/api/auth/yandex/callback",
       },
-      async (_accessToken: string, _refreshToken: string, profile: any, done: any) => {
+      async (
+        _accessToken: string,
+        _refreshToken: string,
+        profile: any,
+        done: any,
+      ) => {
         try {
           const oauthProfile: OAuthProfile = {
             id: profile.id,
-            email: profile.emails?.[0]?.value || profile.default_email || '',
+            email: profile.emails?.[0]?.value || profile.default_email || "",
             name: profile.displayName || profile.real_name,
-            avatar: profile.default_avatar_id 
+            avatar: profile.default_avatar_id
               ? `https://avatars.yandex.net/get-yapic/${profile.default_avatar_id}/islands-200`
               : undefined,
-            provider: 'yandex',
+            provider: "yandex",
           };
 
           // Find or create user
@@ -83,7 +90,7 @@ if (process.env.YANDEX_CLIENT_ID && process.env.YANDEX_CLIENT_SECRET) {
                 email: oauthProfile.email,
                 name: oauthProfile.name,
                 avatar: oauthProfile.avatar,
-                provider: 'yandex',
+                provider: "yandex",
                 providerId: `yandex_${oauthProfile.id}`,
               },
             });
@@ -93,8 +100,8 @@ if (process.env.YANDEX_CLIENT_ID && process.env.YANDEX_CLIENT_SECRET) {
         } catch (error) {
           return done(error as Error);
         }
-      }
-    )
+      },
+    ),
   );
 }
 

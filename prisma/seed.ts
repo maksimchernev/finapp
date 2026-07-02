@@ -11,7 +11,11 @@ const categories = [
     color: '#D85A30',
     bgColor: '#FAECE7',
     type: 'expense',
-    keywords: ['mercadona', 'carrefour', 'lidl', 'dia', 'aldi', 'супермаркет', 'магазин', 'продукты'],
+    keywords: [
+      'mercadona', 'carrefour', 'lidl', 'dia', 'aldi',
+      'supermarket', 'grocery', 'groceries', 'food store', 'convenience store', 'mini market', 'hypermarket',
+      'супермаркет', 'магазин', 'продукты',
+    ],
     isDefault: true,
   },
   {
@@ -21,7 +25,11 @@ const categories = [
     color: '#D4537E',
     bgColor: '#FBEAF0',
     type: 'expense',
-    keywords: ['metro', 'taxi', 'uber', 'cabify', 'bolt', 'renfe', 'транспорт', 'такси', 'метро'],
+    keywords: [
+      'metro', 'taxi', 'uber', 'cabify', 'bolt', 'renfe',
+      'carsharing', 'bus', 'train', 'subway', 'underground', 'tram', 'parking', 'transit', 'public transport', 'fuel', 'petrol', 'gas station',
+      'каршеринг', 'транспорт', 'такси', 'метро',
+    ],
     isDefault: true,
   },
   {
@@ -31,7 +39,10 @@ const categories = [
     color: '#1D9E75',
     bgColor: '#E1F5EE',
     type: 'expense',
-    keywords: ['cafe', 'restaurant', 'bar', 'starbucks', 'mcdonalds', 'pizza', 'кафе', 'ресторан', 'бар', 'фастфуд', 'пицца', 'еда'],
+    keywords: [
+      'cafe', 'coffee', 'restaurant', 'bar', 'pub', 'starbucks', 'mcdonalds', 'burger', 'pizza', 'sushi', 'bakery', 'food delivery', 'takeaway', 'fast food',
+      'кафе', 'ресторан', 'бар', 'фастфуд', 'пицца', 'еда',
+    ],
     isDefault: true,
   },
   {
@@ -41,7 +52,10 @@ const categories = [
     color: '#7F77DD',
     bgColor: '#EEEDFE',
     type: 'expense',
-    keywords: ['cinema', 'netflix', 'spotify', 'game', 'steam', 'кино', 'развлечения', 'игры'],
+    keywords: [
+      'cinema', 'movie', 'theatre', 'theater', 'concert', 'ticket', 'tickets', 'netflix', 'spotify', 'game', 'games', 'gaming', 'steam', 'playstation', 'xbox',
+      'кино', 'развлечения', 'игры',
+    ],
     isDefault: true,
   },
   {
@@ -51,7 +65,10 @@ const categories = [
     color: '#E24B4A',
     bgColor: '#FBEAEA',
     type: 'expense',
-    keywords: ['pharmacy', 'hospital', 'doctor', 'аптека', 'врач', 'больница'],
+    keywords: [
+      'pharmacy', 'drugstore', 'hospital', 'clinic', 'doctor', 'medical', 'medicine', 'dentist', 'healthcare', 'health',
+      'аптека', 'врач', 'больница',
+    ],
     isDefault: true,
   },
   {
@@ -61,7 +78,10 @@ const categories = [
     color: '#BA7517',
     bgColor: '#FAEEDA',
     type: 'expense',
-    keywords: ['zara', 'h&m', 'amazon', 'ebay', 'магазин', 'покупки', 'одежда'],
+    keywords: [
+      'zara', 'h&m', 'amazon', 'ebay', 'marketplace', 'store', 'shop', 'mall', 'retail', 'clothing', 'clothes', 'shoes', 'electronics', 'cosmetics',
+      'магазин', 'покупки', 'одежда',
+    ],
     isDefault: true,
   },
   {
@@ -71,7 +91,10 @@ const categories = [
     color: '#378ADD',
     bgColor: '#E6F1FB',
     type: 'expense',
-    keywords: ['electricity', 'water', 'gas', 'internet', 'комуналка', 'электричество', 'вода'],
+    keywords: [
+      'electricity', 'water', 'gas', 'internet', 'utilities', 'utility', 'bill', 'bills', 'mobile', 'telecom', 'phone bill', 'broadband',
+      'комуналка', 'коммуналка', 'электричество', 'вода',
+    ],
     isDefault: true,
   },
   {
@@ -81,7 +104,10 @@ const categories = [
     color: '#8B5E34',
     bgColor: '#F3E8DA',
     type: 'expense',
-    keywords: ['погашение кредита', 'платеж по кредиту', 'ипотека', 'заём', 'займ', 'loan'],
+    keywords: [
+      'loan', 'loan payment', 'loan repayment', 'mortgage', 'mortgage payment', 'credit payment', 'debt payment',
+      'погашение кредита', 'платеж по кредиту', 'ипотека', 'заём', 'займ',
+    ],
     isDefault: true,
   },
   {
@@ -103,7 +129,7 @@ const categories = [
     color: '#639922',
     bgColor: '#EAF3DE',
     type: 'income',
-    keywords: ['salary', 'payroll', 'wage', 'зарплата', 'оклад'],
+    keywords: ['salary', 'payroll', 'wage', 'paycheck', 'compensation', 'bonus', 'зарплата', 'оклад', 'премия'],
     isDefault: true,
   },
   {
@@ -113,7 +139,7 @@ const categories = [
     color: '#378ADD',
     bgColor: '#E6F1FB',
     type: 'income',
-    keywords: ['freelance', 'upwork', 'fiverr', 'фриланс', 'проект'],
+    keywords: ['freelance', 'upwork', 'fiverr', 'contractor', 'consulting', 'invoice payment', 'payout', 'project payment', 'фриланс', 'проект'],
     isDefault: true,
   },
   {
@@ -123,7 +149,7 @@ const categories = [
     color: '#1D9E75',
     bgColor: '#E1F5EE',
     type: 'income',
-    keywords: ['cashback', 'кешбэк', 'кэшбэк', 'кэшбек', 'кешбек', 'возврат за покупку'],
+    keywords: ['cashback', 'cash back', 'reward', 'rewards', 'rebate', 'refund for purchase', 'кешбэк', 'кэшбэк', 'кэшбек', 'кешбек', 'возврат за покупку'],
     isDefault: true,
   },
   {
@@ -133,7 +159,7 @@ const categories = [
     color: '#2E7DD7',
     bgColor: '#E6F1FB',
     type: 'income',
-    keywords: ['проценты', 'проценты на остаток', 'ежедневный доход', 'interest'],
+    keywords: ['interest', 'savings interest', 'deposit interest', 'balance interest', 'interest payment', 'проценты', 'проценты на остаток', 'ежедневный доход'],
     isDefault: true,
   },
   {
@@ -143,7 +169,7 @@ const categories = [
     color: '#1D9E75',
     bgColor: '#E1F5EE',
     type: 'income',
-    keywords: [],
+    keywords: ['incoming transfer', 'transfer received', 'reimbursement', 'compensation', 'gift', 'other income'],
     isDefault: true,
   },
 ];
