@@ -4,6 +4,7 @@ import { TransactionInput } from '../types';
 import {
   categoryExists,
   createUserTransaction,
+  createUserTransactions,
   deleteUserTransaction,
   findUserTransaction,
   getUserTransactionStatistics,
@@ -64,15 +65,49 @@ export const getTransaction = async (req: Request, res: Response) => {
 export const createTransaction = async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
-    const data: TransactionInput = req.body;
+    const transactions: TransactionInput[] = Array.isArray(req.body)
+      ? req.body
+      : [req.body];
 
-    if (!(await categoryExists(prisma, userId, data.categoryId))) {
-      res.status(400).json({ error: 'Category not found' });
+    const categoryIds = new Set(
+      transactions
+        .map((transaction) => transaction.categoryId)
+        .filter(Boolean),
+    );
+    for (const categoryId of categoryIds) {
+      if (!(await categoryExists(prisma, userId, categoryId))) {
+        res.status(400).json({ error: 'Category not found' });
+        return;
+      }
+    }
+
+    const bankIds = new Set(
+      transactions
+        .map((transaction) => transaction.bankId)
+        .filter(Boolean),
+    );
+    for (const bankId of bankIds) {
+      if (!(await userBankExists(prisma, userId, bankId))) {
+        res.status(400).json({ error: 'Bank not found' });
+        return;
+      }
+    }
+
+    if (transactions.length === 0) {
+      res.status(400).json({ error: 'Transactions batch must not be empty' });
       return;
     }
 
-    if (!(await userBankExists(prisma, userId, data.bankId))) {
-      res.status(400).json({ error: 'Bank not found' });
+    if (Array.isArray(req.body)) {
+      const createdTransactions = await createUserTransactions(prisma, userId, transactions);
+      res.status(201).json(createdTransactions);
+      return;
+    }
+
+    const data = transactions[0];
+
+    if (!data) {
+      res.status(400).json({ error: 'Transaction is required' });
       return;
     }
 

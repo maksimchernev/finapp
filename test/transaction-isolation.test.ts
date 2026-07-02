@@ -31,7 +31,7 @@ type FakeTransaction = {
   } | null;
 };
 
-function createFakeCategory(id: string) {
+function createFakeCategory(id: string, type: "expense" | "income" = "expense") {
   return {
     id,
     name: id,
@@ -39,7 +39,7 @@ function createFakeCategory(id: string) {
     icon: "receipt",
     color: "#244c38",
     bgColor: "#e6eee8",
-    type: "expense",
+    type,
     keywords: [],
     isDefault: true,
     createdAt: new Date("2026-01-01T00:00:00.000Z"),
@@ -223,5 +223,40 @@ test("statistics ignore transactions owned by other users", async () => {
   assert.equal(statistics.totalIncomeMinor, 100000);
   assert.equal(statistics.totalExpenseMinor, 1200);
   assert.equal(statistics.balanceMinor, 98800);
-  assert.deepEqual(statistics.byCategory.map((item) => item.totalMinor), [1200]);
+  assert.deepEqual(statistics.byCategory.map((item) => item.totalMinor), [-1200]);
+});
+
+test("statistics include income and expense category totals with signs", async () => {
+  const expenseCategory = createFakeCategory("groceries");
+  const incomeCategory = createFakeCategory("salary", "income");
+  const { prisma } = createFakePrisma([
+    {
+      id: "income-a",
+      userId: "user-a",
+      amountMinor: 100000,
+      date: new Date("2026-01-02T00:00:00.000Z"),
+      merchant: "Salary",
+      categoryId: incomeCategory.id,
+      category: incomeCategory,
+    },
+    {
+      id: "expense-a",
+      userId: "user-a",
+      amountMinor: -1200,
+      date: new Date("2026-01-02T00:00:00.000Z"),
+      merchant: "Market",
+      categoryId: expenseCategory.id,
+      category: expenseCategory,
+    },
+  ]);
+
+  const statistics = await getUserTransactionStatistics(prisma, "user-a", {});
+
+  assert.deepEqual(
+    statistics.byCategory.map((item) => ({ id: item.category.id, totalMinor: item.totalMinor })),
+    [
+      { id: "salary", totalMinor: 100000 },
+      { id: "groceries", totalMinor: -1200 },
+    ],
+  );
 });

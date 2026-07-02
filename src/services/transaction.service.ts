@@ -126,6 +126,18 @@ export async function createUserTransaction(
   });
 }
 
+export async function createUserTransactions(
+  prisma: TransactionPrisma,
+  userId: string,
+  transactions: TransactionInput[],
+) {
+  return prisma.transaction.createManyAndReturn({
+    data: transactions.map((transaction) =>
+      toTransactionCreateData(userId, transaction),
+    ),
+  });
+}
+
 export async function findUserTransaction(
   prisma: TransactionPrisma,
   userId: string,
@@ -203,7 +215,7 @@ export async function getUserTransactionStatistics(
     if (!acc[key]) {
       acc[key] = { category: transaction.category, totalMinor: 0, count: 0 };
     }
-    acc[key].totalMinor += Math.abs(transaction.amountMinor);
+    acc[key].totalMinor += transaction.amountMinor;
     acc[key].count += 1;
     return acc;
   }, {});

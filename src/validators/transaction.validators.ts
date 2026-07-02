@@ -1,4 +1,4 @@
-import { body, param, query } from "express-validator";
+import { body, oneOf, param, query } from "express-validator";
 import { validateRequest } from "../middleware/validation.middleware";
 
 const AMOUNT_MINOR_MIN = -2147483648;
@@ -6,7 +6,7 @@ const AMOUNT_MINOR_MAX = 2147483647;
 const SUPPORTED_CURRENCIES = ["RUB", "EUR", "USD"] as const;
 const SUPPORTED_SOURCE_TYPES = ["screenshot", "manual", "statement"] as const;
 
-const amountMinorRule = body("amountMinor")
+const amountMinorRuleAt = (path: string) => body(path)
   .isInt({ min: AMOUNT_MINOR_MIN, max: AMOUNT_MINOR_MAX })
   .withMessage("amountMinor must be an integer minor-unit amount")
   .bail()
@@ -23,12 +23,14 @@ const optionalAmountMinorRule = body("amountMinor")
   .withMessage("amountMinor must not be zero")
   .toInt();
 
-const currencyRule = body("currency")
+const currencyRuleAt = (path: string) => body(path)
   .optional()
   .isIn(SUPPORTED_CURRENCIES)
   .withMessage(`currency must be one of: ${SUPPORTED_CURRENCIES.join(", ")}`);
 
-const dateRule = body("date")
+const currencyRule = currencyRuleAt("currency");
+
+const dateRuleAt = (path: string) => body(path)
   .isISO8601()
   .withMessage("date must be an ISO 8601 date");
 
@@ -37,7 +39,7 @@ const optionalDateRule = body("date")
   .isISO8601()
   .withMessage("date must be an ISO 8601 date");
 
-const merchantRule = body("merchant")
+const merchantRuleAt = (path: string) => body(path)
   .trim()
   .notEmpty()
   .withMessage("merchant is required")
@@ -54,7 +56,7 @@ const optionalMerchantRule = body("merchant")
   .isLength({ max: 160 })
   .withMessage("merchant must be 160 characters or less");
 
-const categoryIdRule = body("categoryId")
+const categoryIdRuleAt = (path: string) => body(path)
   .optional({ values: "null" })
   .isString()
   .withMessage("categoryId must be a string")
@@ -62,7 +64,9 @@ const categoryIdRule = body("categoryId")
   .isLength({ min: 1, max: 128 })
   .withMessage("categoryId must be between 1 and 128 characters");
 
-const bankIdRule = body("bankId")
+const categoryIdRule = categoryIdRuleAt("categoryId");
+
+const bankIdRuleAt = (path: string) => body(path)
   .optional({ values: "null" })
   .isString()
   .withMessage("bankId must be a string")
@@ -70,24 +74,46 @@ const bankIdRule = body("bankId")
   .isLength({ min: 1, max: 128 })
   .withMessage("bankId must be between 1 and 128 characters");
 
-const confidenceRule = body("confidence")
+const bankIdRule = bankIdRuleAt("bankId");
+
+const confidenceRuleAt = (path: string) => body(path)
   .optional({ values: "null" })
   .isFloat({ min: 0, max: 100 })
   .withMessage("confidence must be between 0 and 100")
   .toFloat();
 
-const sourceTypeRule = body("sourceType")
+const confidenceRule = confidenceRuleAt("confidence");
+
+const sourceTypeRuleAt = (path: string) => body(path)
   .optional()
   .isIn(SUPPORTED_SOURCE_TYPES)
   .withMessage(`sourceType must be one of: ${SUPPORTED_SOURCE_TYPES.join(", ")}`);
 
-const notesRule = body("notes")
+const sourceTypeRule = sourceTypeRuleAt("sourceType");
+
+const notesRuleAt = (path: string) => body(path)
   .optional({ values: "null" })
   .isString()
   .withMessage("notes must be a string")
   .bail()
   .isLength({ max: 500 })
   .withMessage("notes must be 500 characters or less");
+
+const notesRule = notesRuleAt("notes");
+
+function transactionCreateRules(pathPrefix = "") {
+  return [
+    amountMinorRuleAt(`${pathPrefix}amountMinor`),
+    currencyRuleAt(`${pathPrefix}currency`),
+    dateRuleAt(`${pathPrefix}date`),
+    merchantRuleAt(`${pathPrefix}merchant`),
+    categoryIdRuleAt(`${pathPrefix}categoryId`),
+    bankIdRuleAt(`${pathPrefix}bankId`),
+    confidenceRuleAt(`${pathPrefix}confidence`),
+    sourceTypeRuleAt(`${pathPrefix}sourceType`),
+    notesRuleAt(`${pathPrefix}notes`),
+  ];
+}
 
 export const transactionListValidators = [
   query("startDate").optional().isISO8601().withMessage("startDate must be an ISO 8601 date"),
@@ -110,15 +136,13 @@ export const transactionIdValidators = [
 ];
 
 export const createTransactionValidators = [
-  amountMinorRule,
-  currencyRule,
-  dateRule,
-  merchantRule,
-  categoryIdRule,
-  bankIdRule,
-  confidenceRule,
-  sourceTypeRule,
-  notesRule,
+  oneOf([
+    transactionCreateRules(),
+    [
+      body().isArray({ min: 1 }).withMessage("transactions batch must not be empty"),
+      ...transactionCreateRules("*."),
+    ],
+  ]),
   validateRequest,
 ];
 
