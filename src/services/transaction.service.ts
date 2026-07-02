@@ -187,8 +187,16 @@ export async function deleteUserTransaction(
 
 export type CategoryStat = {
   category: Category;
+  currency: string;
   totalMinor: number;
   count: number;
+};
+
+export type CurrencyTotals = {
+  currency: string;
+  totalIncomeMinor: number;
+  totalExpenseMinor: number;
+  balanceMinor: number;
 };
 
 export async function getUserTransactionStatistics(
@@ -201,19 +209,48 @@ export async function getUserTransactionStatistics(
     include: { bank: true, category: true },
   });
 
-  const totalIncomeMinor = transactions
-    .filter((transaction) => transaction.amountMinor > 0)
-    .reduce((sum, transaction) => sum + transaction.amountMinor, 0);
+  const totalsByCurrencyMap = transactions.reduce<Record<string, CurrencyTotals>>(
+    (acc, transaction) => {
+      const currency = transaction.currency || "RUB";
+      if (!acc[currency]) {
+        acc[currency] = {
+          currency,
+          totalIncomeMinor: 0,
+          totalExpenseMinor: 0,
+          balanceMinor: 0,
+        };
+      }
 
-  const totalExpenseMinor = transactions
-    .filter((transaction) => transaction.amountMinor < 0)
-    .reduce((sum, transaction) => sum + Math.abs(transaction.amountMinor), 0);
+      if (transaction.amountMinor > 0) {
+        acc[currency].totalIncomeMinor += transaction.amountMinor;
+      } else if (transaction.amountMinor < 0) {
+        acc[currency].totalExpenseMinor += Math.abs(transaction.amountMinor);
+      }
+      acc[currency].balanceMinor =
+        acc[currency].totalIncomeMinor - acc[currency].totalExpenseMinor;
+      return acc;
+    },
+    {},
+  );
+  const totalsByCurrency = Object.values(totalsByCurrencyMap);
+  const rubTotals = totalsByCurrencyMap.RUB || {
+    currency: "RUB",
+    totalIncomeMinor: 0,
+    totalExpenseMinor: 0,
+    balanceMinor: 0,
+  };
 
   const byCategory = transactions.reduce<Record<string, CategoryStat>>((acc, transaction) => {
     if (!transaction.category) return acc;
-    const key = transaction.category.id;
+    const currency = transaction.currency || "RUB";
+    const key = `${transaction.category.id}:${currency}`;
     if (!acc[key]) {
-      acc[key] = { category: transaction.category, totalMinor: 0, count: 0 };
+      acc[key] = {
+        category: transaction.category,
+        currency,
+        totalMinor: 0,
+        count: 0,
+      };
     }
     acc[key].totalMinor += transaction.amountMinor;
     acc[key].count += 1;
@@ -221,9 +258,10 @@ export async function getUserTransactionStatistics(
   }, {});
 
   return {
-    totalIncomeMinor,
-    totalExpenseMinor,
-    balanceMinor: totalIncomeMinor - totalExpenseMinor,
+    totalIncomeMinor: rubTotals.totalIncomeMinor,
+    totalExpenseMinor: rubTotals.totalExpenseMinor,
+    balanceMinor: rubTotals.balanceMinor,
+    totalsByCurrency,
     byCategory: Object.values(byCategory),
   };
 }

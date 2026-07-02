@@ -14,6 +14,7 @@ type FakeTransaction = {
   id: string;
   userId: string;
   amountMinor: number;
+  currency?: string;
   date: Date;
   merchant: string;
   categoryId: string | null;
@@ -259,4 +260,73 @@ test("statistics include income and expense category totals with signs", async (
       { id: "groceries", totalMinor: -1200 },
     ],
   );
+});
+
+test("statistics group totals and category totals by currency", async () => {
+  const expenseCategory = createFakeCategory("groceries");
+  const incomeCategory = createFakeCategory("salary", "income");
+  const { prisma } = createFakePrisma([
+    {
+      id: "rub-income",
+      userId: "user-a",
+      amountMinor: 100000,
+      currency: "RUB",
+      date: new Date("2026-01-02T00:00:00.000Z"),
+      merchant: "Salary",
+      categoryId: incomeCategory.id,
+      category: incomeCategory,
+    },
+    {
+      id: "rub-expense",
+      userId: "user-a",
+      amountMinor: -1200,
+      currency: "RUB",
+      date: new Date("2026-01-02T00:00:00.000Z"),
+      merchant: "Market",
+      categoryId: expenseCategory.id,
+      category: expenseCategory,
+    },
+    {
+      id: "huf-expense",
+      userId: "user-a",
+      amountMinor: -650000,
+      currency: "HUF",
+      date: new Date("2026-01-02T00:00:00.000Z"),
+      merchant: "Cafe",
+      categoryId: expenseCategory.id,
+      category: expenseCategory,
+    },
+  ]);
+
+  const statistics = await getUserTransactionStatistics(prisma, "user-a", {});
+
+  assert.deepEqual(statistics.totalsByCurrency, [
+    {
+      currency: "RUB",
+      totalIncomeMinor: 100000,
+      totalExpenseMinor: 1200,
+      balanceMinor: 98800,
+    },
+    {
+      currency: "HUF",
+      totalIncomeMinor: 0,
+      totalExpenseMinor: 650000,
+      balanceMinor: -650000,
+    },
+  ]);
+  assert.deepEqual(
+    statistics.byCategory.map((item) => ({
+      id: item.category.id,
+      currency: item.currency,
+      totalMinor: item.totalMinor,
+    })),
+    [
+      { id: "salary", currency: "RUB", totalMinor: 100000 },
+      { id: "groceries", currency: "RUB", totalMinor: -1200 },
+      { id: "groceries", currency: "HUF", totalMinor: -650000 },
+    ],
+  );
+  assert.equal(statistics.totalIncomeMinor, 100000);
+  assert.equal(statistics.totalExpenseMinor, 1200);
+  assert.equal(statistics.balanceMinor, 98800);
 });

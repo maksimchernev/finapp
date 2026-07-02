@@ -47,3 +47,38 @@ test("create transaction validators accept a transaction batch", async () => {
   assert.equal(response.statusCode, 200);
   assert.equal(response.payload, undefined);
 });
+
+test("create transaction validators accept HUF transactions", async () => {
+  const req = {
+    body: [
+      {
+        amountMinor: -650000,
+        currency: "HUF",
+        date: "2026-07-02",
+        merchant: "Test merchant",
+        sourceType: "screenshot",
+      },
+    ],
+  };
+  const response = {
+    statusCode: 200,
+    payload: undefined as unknown,
+    status(code: number) {
+      this.statusCode = code;
+      return this;
+    },
+    json(payload: unknown) {
+      this.payload = payload;
+      this.onDone?.();
+      return this;
+    },
+    onDone: undefined as undefined | (() => void),
+  };
+
+  for (const validator of createTransactionValidators) {
+    await runMiddleware(validator, req, response);
+  }
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.payload, undefined);
+});

@@ -3,7 +3,7 @@ import { validateRequest } from "../middleware/validation.middleware";
 
 const AMOUNT_MINOR_MIN = -2147483648;
 const AMOUNT_MINOR_MAX = 2147483647;
-const SUPPORTED_CURRENCIES = ["RUB", "EUR", "USD"] as const;
+const SUPPORTED_CURRENCIES = ["RUB", "EUR", "USD", "HUF"] as const;
 const SUPPORTED_SOURCE_TYPES = ["screenshot", "manual", "statement"] as const;
 
 const amountMinorRuleAt = (path: string) => body(path)
