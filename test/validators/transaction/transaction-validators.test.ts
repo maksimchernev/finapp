@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createTransactionValidators } from "../src/validators/transaction.validators";
+import { createTransactionValidators } from "../../../src/validators/transaction.validators";
 
 function runMiddleware(middleware: unknown, req: unknown, res: unknown) {
   return new Promise<void>((resolve) => {

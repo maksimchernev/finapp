@@ -3,7 +3,7 @@ import test from "node:test";
 import {
   createUserTransactions,
   type TransactionPrisma,
-} from "../src/services/transaction.service";
+} from "../../../src/services/transaction.service";
 
 test("creating transactions in batch uses one createManyAndReturn call scoped to user", async () => {
   const calls: Array<{ method: string; args: unknown }> = [];

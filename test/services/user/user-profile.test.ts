@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildUserProfileIdentity, updateUserProfile, type UserPrisma } from "../src/services/user.service";
+import { buildUserProfileIdentity, updateUserProfile, type UserPrisma } from "../../../src/services/user.service";
 
 type FakeUser = {
   id: string;

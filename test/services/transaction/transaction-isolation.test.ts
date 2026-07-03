@@ -8,7 +8,7 @@ import {
   listUserTransactions,
   updateUserTransaction,
   type TransactionPrisma,
-} from "../src/services/transaction.service";
+} from "../../../src/services/transaction.service";
 
 type FakeTransaction = {
   id: string;

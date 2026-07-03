@@ -6,7 +6,7 @@ import {
   listVisibleCategories,
   updateUserCategory,
   type CategoryPrisma,
-} from "../src/services/category.service";
+} from "../../../src/services/category.service";
 
 type FakeCategory = {
   id: string;

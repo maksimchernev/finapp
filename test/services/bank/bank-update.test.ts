@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { updateUserBank, type BankPrisma } from "../src/services/bank.service";
+import { updateUserBank, type BankPrisma } from "../../../src/services/bank.service";
 
 type FakeBank = {
   id: string;
