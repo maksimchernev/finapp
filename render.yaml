@@ -7,13 +7,14 @@ services:
     plan: free
     region: frankfurt
     buildCommand: npm ci --include=dev && npm run prisma:generate && npm run build
-    preDeployCommand: npm run prisma:deploy && npm run prisma:seed
-    startCommand: npm start
+    startCommand: npm run prisma:deploy && npm start
     healthCheckPath: /health
     autoDeployTrigger: checksPass
     envVars:
       - key: NODE_ENV
         value: production
+      - key: NODE_VERSION
+        value: 20
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_EXPIRES_IN
