@@ -130,7 +130,7 @@ export const transactionListValidators = [
     .withMessage("endDate must be later than startDate"),
   query("bankId").optional().isString().isLength({ min: 1, max: 128 }),
   query("categoryId").optional().isString().isLength({ min: 1, max: 128 }),
-  query("limit").optional().isInt({ min: 1, max: 100 }).toInt(),
+  query("limit").optional().isInt({ min: 1, max: 500 }).toInt(),
   query("offset").optional().isInt({ min: 0 }).toInt(),
   validateRequest,
 ];

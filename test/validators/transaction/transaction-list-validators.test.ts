@@ -58,7 +58,7 @@ test("transaction list validators reject non-increasing date boundaries", async 
 test("transaction list validators enforce page and id bounds", async () => {
   for (const query of [
     { limit: "0" },
-    { limit: "101" },
+    { limit: "501" },
     { offset: "-1" },
     { bankId: "" },
     { categoryId: "" },
