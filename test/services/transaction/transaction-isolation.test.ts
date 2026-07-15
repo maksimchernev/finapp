@@ -97,6 +97,26 @@ test("transaction list filters are always scoped by user id", () => {
   assert.deepEqual(buildUserTransactionWhere("user-a"), { userId: "user-a" });
 });
 
+test("transaction list composes date, bank, and category filters", () => {
+  assert.deepEqual(
+    buildUserTransactionWhere("user-a", {
+      startDate: "2026-07-01T21:00:00.000Z",
+      endDate: "2026-07-08T21:00:00.000Z",
+      bankId: "bank-a",
+      categoryId: "category-a",
+    }),
+    {
+      userId: "user-a",
+      date: {
+        gte: new Date("2026-07-01T21:00:00.000Z"),
+        lt: new Date("2026-07-08T21:00:00.000Z"),
+      },
+      bankId: "bank-a",
+      categoryId: "category-a",
+    },
+  );
+});
+
 test("listing transactions returns only the current user's rows", async () => {
   const category = createFakeCategory("groceries");
   const { prisma, calls } = createFakePrisma([
@@ -130,7 +150,7 @@ test("listing transactions returns only the current user's rows", async () => {
       {
         where: { userId: "user-a" },
         include: { bank: true, category: true },
-        orderBy: { date: "desc" },
+        orderBy: [{ date: "desc" }, { id: "desc" }],
         take: 100,
         skip: 0,
       },
