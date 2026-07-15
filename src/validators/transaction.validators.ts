@@ -116,11 +116,20 @@ function transactionCreateRules(pathPrefix = "") {
 }
 
 export const transactionListValidators = [
-  query("startDate").optional().isISO8601({ strict: true, strictSeparator: true }).withMessage("startDate must be an ISO 8601 timestamp"),
+  query("startDate")
+    .optional()
+    .isISO8601({ strict: true, strictSeparator: true })
+    .withMessage("startDate must be an ISO 8601 timestamp")
+    .bail()
+    .custom((value) => typeof value === "string" && /T.*(?:Z|[+-]\d{2}:\d{2})$/.test(value))
+    .withMessage("startDate must include a time and timezone"),
   query("endDate")
     .optional()
     .isISO8601({ strict: true, strictSeparator: true })
     .withMessage("endDate must be an ISO 8601 timestamp")
+    .bail()
+    .custom((value) => typeof value === "string" && /T.*(?:Z|[+-]\d{2}:\d{2})$/.test(value))
+    .withMessage("endDate must include a time and timezone")
     .bail()
     .custom((endDate, { req }) => {
       const startDate = req.query?.startDate;

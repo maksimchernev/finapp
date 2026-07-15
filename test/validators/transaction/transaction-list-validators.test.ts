@@ -55,6 +55,11 @@ test("transaction list validators reject non-increasing date boundaries", async 
   assert.equal(response.statusCode, 400);
 });
 
+test("transaction list validators require timestamp boundaries", async () => {
+  const response = await validate({ startDate: "2026-07-01", endDate: "2026-07-08" });
+  assert.equal(response.statusCode, 400);
+});
+
 test("transaction list validators enforce page and id bounds", async () => {
   for (const query of [
     { limit: "0" },
