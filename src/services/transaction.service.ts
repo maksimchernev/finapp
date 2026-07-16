@@ -6,6 +6,7 @@ export type TransactionPrisma = Pick<PrismaClient, "transaction" | "category" | 
 export type TransactionListFilters = {
   startDate?: string;
   endDate?: string;
+  bankId?: string;
   categoryId?: string;
 };
 
@@ -23,8 +24,12 @@ export function buildUserTransactionWhere(
   if (filters.startDate || filters.endDate) {
     where.date = {
       ...(filters.startDate && { gte: new Date(filters.startDate) }),
-      ...(filters.endDate && { lte: new Date(filters.endDate) }),
+      ...(filters.endDate && { lt: new Date(filters.endDate) }),
     };
+  }
+
+  if (filters.bankId) {
+    where.bankId = filters.bankId;
   }
 
   if (filters.categoryId) {
@@ -71,7 +76,7 @@ export async function listUserTransactions(
     prisma.transaction.findMany({
       where,
       include: { bank: true, category: true },
-      orderBy: { date: "desc" },
+      orderBy: [{ date: "desc" }, { id: "desc" }],
       take: pagination.limit,
       skip: pagination.offset,
     }),

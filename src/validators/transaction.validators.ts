@@ -116,8 +116,28 @@ function transactionCreateRules(pathPrefix = "") {
 }
 
 export const transactionListValidators = [
-  query("startDate").optional().isISO8601().withMessage("startDate must be an ISO 8601 date"),
-  query("endDate").optional().isISO8601().withMessage("endDate must be an ISO 8601 date"),
+  query("startDate")
+    .optional()
+    .isISO8601({ strict: true, strictSeparator: true })
+    .withMessage("startDate must be an ISO 8601 timestamp")
+    .bail()
+    .custom((value) => typeof value === "string" && /T.*(?:Z|[+-]\d{2}:\d{2})$/.test(value))
+    .withMessage("startDate must include a time and timezone"),
+  query("endDate")
+    .optional()
+    .isISO8601({ strict: true, strictSeparator: true })
+    .withMessage("endDate must be an ISO 8601 timestamp")
+    .bail()
+    .custom((value) => typeof value === "string" && /T.*(?:Z|[+-]\d{2}:\d{2})$/.test(value))
+    .withMessage("endDate must include a time and timezone")
+    .bail()
+    .custom((endDate, { req }) => {
+      const startDate = req.query?.startDate;
+      if (typeof startDate !== "string") return true;
+      return new Date(startDate).getTime() < new Date(endDate).getTime();
+    })
+    .withMessage("endDate must be later than startDate"),
+  query("bankId").optional().isString().isLength({ min: 1, max: 128 }),
   query("categoryId").optional().isString().isLength({ min: 1, max: 128 }),
   query("limit").optional().isInt({ min: 1, max: 500 }).toInt(),
   query("offset").optional().isInt({ min: 0 }).toInt(),
