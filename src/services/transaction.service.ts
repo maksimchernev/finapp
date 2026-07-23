@@ -1,7 +1,10 @@
 import { Category, Prisma, PrismaClient } from "@prisma/client";
 import { TransactionInput } from "../types";
 
-export type TransactionPrisma = Pick<PrismaClient, "transaction" | "category" | "bank">;
+export type TransactionPrisma = Pick<
+  PrismaClient,
+  "$transaction" | "transaction" | "category" | "bank"
+>;
 
 export type TransactionListFilters = {
   startDate?: string;
@@ -136,10 +139,31 @@ export async function createUserTransactions(
   userId: string,
   transactions: TransactionInput[],
 ) {
-  return prisma.transaction.createManyAndReturn({
-    data: transactions.map((transaction) =>
-      toTransactionCreateData(userId, transaction),
+  const bankIds = [
+    ...new Set(
+      transactions
+        .map((transaction) => transaction.bankId)
+        .filter((bankId): bankId is string => Boolean(bankId)),
     ),
+  ];
+  const importedAt = new Date();
+
+  return prisma.$transaction(async (transactionPrisma) => {
+    const createdTransactions =
+      await transactionPrisma.transaction.createManyAndReturn({
+        data: transactions.map((transaction) =>
+          toTransactionCreateData(userId, transaction),
+        ),
+      });
+
+    if (bankIds.length > 0) {
+      await transactionPrisma.bank.updateMany({
+        where: { userId, id: { in: bankIds } },
+        data: { lastImportedAt: importedAt },
+      });
+    }
+
+    return createdTransactions;
   });
 }
 

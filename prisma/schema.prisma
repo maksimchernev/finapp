@@ -61,6 +61,7 @@ model Bank {
   name           String
   normalizedName String
   keywords       String[] @default([])
+  lastImportedAt DateTime?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
