@@ -79,7 +79,7 @@ const categories = [
     bgColor: '#FAEEDA',
     type: 'expense',
     keywords: [
-      'zara', 'h&m', 'amazon', 'ebay', 'marketplace', 'store', 'shop', 'mall', 'retail', 'clothing', 'clothes', 'shoes', 'electronics', 'cosmetics',
+      'zara', 'h&m', 'amazon', 'ebay', 'marketplace', 'store', 'shop', 'mall', 'retail', 'clothing', 'clothes', 'shoes', 'electronics', 'cosmetics', 'home improvement',
       'магазин', 'покупки', 'одежда',
     ],
     isDefault: true,
