@@ -10,6 +10,8 @@ import transactionRoutes from "./routes/transaction.routes";
 import categoryRoutes from "./routes/category.routes";
 import userRoutes from "./routes/user.routes";
 import bankRoutes from "./routes/bank.routes";
+import creditCardRoutes from "./routes/credit-card.routes";
+import { pushRouter, reminderDispatchRouter } from "./routes/push.routes";
 
 import { errorHandler } from "./middleware/error.middleware";
 import "./services/passport.service"; // Initialize passport strategies
@@ -69,6 +71,9 @@ app.use("/api/transactions", transactionRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/banks", bankRoutes);
+app.use("/api/credit-cards", creditCardRoutes);
+app.use("/api/push", pushRouter);
+app.use("/api/internal/credit-card-reminders", reminderDispatchRouter);
 
 // 404 handler
 app.use("*", (req, res) => {

@@ -1,0 +1,24 @@
+name: Credit card reminders
+
+on:
+  schedule:
+    - cron: "0,20,40 9 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send due reminders
+        env:
+          DISPATCH_URL: ${{ secrets.REMINDER_DISPATCH_URL }}
+          DISPATCH_SECRET: ${{ secrets.REMINDER_DISPATCH_SECRET }}
+        run: |
+          test -n "$DISPATCH_URL"
+          test -n "$DISPATCH_SECRET"
+          curl --fail-with-body --retry 2 --max-time 120 \
+            -X POST "$DISPATCH_URL" \
+            -H "Authorization: Bearer $DISPATCH_SECRET"

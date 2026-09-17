@@ -292,6 +292,12 @@ railway add --plugin postgresql
 5. Установите Start Command: `npm start`
 6. Добавьте переменные окружения
 
+### Напоминания по кредитным картам
+
+Ключи Web Push создаются один раз командой `npx web-push generate-vapid-keys`. В окружении API задайте `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (например, `mailto:you@example.com`) и длинный случайный `REMINDER_DISPATCH_SECRET`. Не меняйте VAPID-ключи после выдачи подписок: иначе пользователям придётся включить уведомления заново.
+
+В GitHub-репозитории backend задайте секреты `REMINDER_DISPATCH_URL` (`https://<api-host>/api/internal/credit-card-reminders/dispatch`) и `REMINDER_DISPATCH_SECRET` с тем же значением, что у API. Workflow `Credit card reminders` запускается в 09:00, 09:20 и 09:40 UTC (12:00, 12:20 и 12:40 МСК). Повторные запуски не дублируют уже отправленные уведомления. GitHub может задержать или пропустить запуск, поэтому точное время доставки не гарантируется.
+
 ## 🎓 Следующие шаги
 
 ### Интеграция с Frontend
