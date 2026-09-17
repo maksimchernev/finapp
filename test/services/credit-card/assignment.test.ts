@@ -8,7 +8,7 @@ test("assignment archives the previous payment once and clears only the active p
     userId: "user-a",
     minPaymentAssignmentDate: new Date("2026-09-17T00:00:00.000Z"),
     assignmentProcessedDate: null as Date | null,
-    minPaymentDueDate: new Date("2026-09-20T00:00:00.000Z") as Date | null,
+    minPaymentDueDate: new Date("2026-09-15T00:00:00.000Z") as Date | null,
     minPaymentAmountMinor: 12345 as number | null,
     minPaymentPaid: true,
   };
@@ -39,4 +39,37 @@ test("assignment archives the previous payment once and clears only the active p
   assert.equal(card.minPaymentDueDate, null);
   assert.equal(card.minPaymentAmountMinor, null);
   assert.equal(card.minPaymentPaid, false);
+});
+
+test("an already assigned upcoming payment remains active on its assignment date", async () => {
+  const assignmentDate = new Date("2026-09-17T00:00:00.000Z");
+  const dueDate = new Date("2026-09-25T00:00:00.000Z");
+  const card = {
+    id: "card-a",
+    userId: "user-a",
+    minPaymentAssignmentDate: assignmentDate,
+    assignmentProcessedDate: null as Date | null,
+    minPaymentDueDate: dueDate,
+    minPaymentAmountMinor: 12345,
+    minPaymentPaid: false,
+  };
+  let archives = 0;
+  const database = {
+    creditCard: {
+      findMany: async () => [card],
+      updateMany: async ({ data }: { data: Record<string, unknown> }) => {
+        Object.assign(card, data);
+        return { count: 1 };
+      },
+    },
+    creditCardMinimumPayment: { create: async () => { archives += 1; } },
+    $transaction: async (callback: (client: unknown) => Promise<unknown>) => callback(database),
+  };
+
+  await processCreditCardAssignments(database as never, "2026-09-17", "user-a");
+
+  assert.equal(card.minPaymentDueDate, dueDate);
+  assert.equal(card.minPaymentAmountMinor, 12345);
+  assert.equal(card.assignmentProcessedDate, assignmentDate);
+  assert.equal(archives, 0);
 });
