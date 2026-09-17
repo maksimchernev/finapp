@@ -125,6 +125,7 @@ model CreditCard {
 
   user           User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
   balances       CreditCardBalance[]
+  graceHistory   CreditCardGracePeriod[]
   paymentHistory CreditCardMinimumPayment[]
   deliveries     CreditCardPushDelivery[]
 
@@ -157,6 +158,19 @@ model CreditCardMinimumPayment {
 
   @@index([cardId])
   @@map("credit_card_minimum_payments")
+}
+
+model CreditCardGracePeriod {
+  id         String   @id @default(cuid())
+  cardId     String
+  endDate    DateTime @db.Date
+  paid       Boolean
+  archivedAt DateTime @default(now())
+
+  card CreditCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@index([cardId])
+  @@map("credit_card_grace_periods")
 }
 
 model PushSubscription {

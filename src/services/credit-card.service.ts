@@ -2,6 +2,7 @@ import {
   PrismaClient,
   type CreditCard,
   type CreditCardBalance,
+  type CreditCardGracePeriod,
   type CreditCardMinimumPayment,
 } from "@prisma/client";
 import { moscowDate } from "./credit-card-reminders.service";
@@ -19,6 +20,7 @@ export type CreditCardInput = {
 
 type CardWithHistory = CreditCard & {
   balances: CreditCardBalance[];
+  graceHistory: CreditCardGracePeriod[];
   paymentHistory: CreditCardMinimumPayment[];
 };
 
@@ -59,6 +61,12 @@ export function serializeCreditCard(card: CardWithHistory) {
       date: dateKey(balance.date),
       amountMinor: balance.amountMinor,
     })),
+    graceHistory: card.graceHistory.map((period) => ({
+      id: period.id,
+      endDate: dateKey(period.endDate),
+      paid: period.paid,
+      archivedAt: period.archivedAt.toISOString(),
+    })),
     paymentHistory: card.paymentHistory.map((payment) => ({
       id: payment.id,
       dueDate: dateKey(payment.dueDate),
@@ -71,6 +79,7 @@ export function serializeCreditCard(card: CardWithHistory) {
 
 const historyInclude = {
   balances: { orderBy: { date: "desc" as const } },
+  graceHistory: { orderBy: { archivedAt: "desc" as const } },
   paymentHistory: { orderBy: { archivedAt: "desc" as const } },
 };
 
@@ -168,13 +177,18 @@ export async function updateUserCreditCard(prisma: PrismaClient, userId: string,
     },
   };
   const archivedPayment = existing.minPaymentDueDate && existing.minPaymentAmountMinor !== null
-    && data.minPaymentDueDate === null && data.minPaymentAssignmentDate
+    && (data.minPaymentDueDate === null && data.minPaymentAssignmentDate || existing.minPaymentPaid && paymentChanged)
     ? { dueDate: existing.minPaymentDueDate, amountMinor: existing.minPaymentAmountMinor, paid: existing.minPaymentPaid }
     : null;
-  if (archivedPayment) {
+  const archivedGrace = existing.gracePeriodEndDate && existing.gracePaid
+    && dateKey(existing.gracePeriodEndDate) !== data.gracePeriodEndDate
+    ? { endDate: existing.gracePeriodEndDate, paid: existing.gracePaid }
+    : null;
+  if (archivedPayment || archivedGrace) {
     await prisma.$transaction(async (tx) => {
       await tx.creditCard.update(update);
-      await tx.creditCardMinimumPayment.create({ data: { cardId, ...archivedPayment } });
+      if (archivedPayment) await tx.creditCardMinimumPayment.create({ data: { cardId, ...archivedPayment } });
+      if (archivedGrace) await tx.creditCardGracePeriod.create({ data: { cardId, ...archivedGrace } });
     });
   } else {
     await prisma.creditCard.update(update);

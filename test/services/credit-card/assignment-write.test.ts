@@ -85,3 +85,50 @@ test("switching from a due payment to its next assignment date keeps the old pay
   assert.equal(archived[0].amountMinor, 10000);
   assert.equal(archived[0].paid, true);
 });
+
+test("adding new dates archives the paid grace period and minimum payment", async () => {
+  const existing = {
+    id: "card-a",
+    userId: "user-a",
+    gracePeriodEndDate: new Date("2026-09-20T00:00:00Z"),
+    gracePaid: true,
+    minPaymentAssignmentDate: null,
+    minPaymentDueDate: new Date("2026-09-25T00:00:00Z"),
+    minPaymentAmountMinor: 10000,
+    minPaymentPaid: true,
+    assignmentProcessedDate: null,
+  };
+  const graceHistory: Array<Record<string, unknown>> = [];
+  const paymentHistory: Array<Record<string, unknown>> = [];
+  let lookups = 0;
+  const database = {
+    creditCard: {
+      findFirst: async () => { lookups += 1; return lookups === 1 ? existing : null; },
+      update: async () => undefined,
+    },
+    creditCardGracePeriod: {
+      create: async ({ data }: { data: Record<string, unknown> }) => { graceHistory.push(data); },
+    },
+    creditCardMinimumPayment: {
+      create: async ({ data }: { data: Record<string, unknown> }) => { paymentHistory.push(data); },
+    },
+    $transaction: async (callback: (client: unknown) => Promise<unknown>) => callback(database),
+  };
+
+  await updateUserCreditCard(database as never, "user-a", "card-a", {
+    ...input,
+    gracePeriodEndDate: "2026-10-20",
+    gracePaid: false,
+    minPaymentAssignmentDate: null,
+    minPaymentDueDate: "2026-10-25",
+    minPaymentAmountMinor: 20000,
+    minPaymentPaid: false,
+  }, "2026-09-20");
+
+  assert.equal(graceHistory.length, 1);
+  assert.deepEqual(graceHistory[0], { cardId: "card-a", endDate: existing.gracePeriodEndDate, paid: true });
+  assert.equal(paymentHistory.length, 1);
+  assert.deepEqual(paymentHistory[0], {
+    cardId: "card-a", dueDate: existing.minPaymentDueDate, amountMinor: 10000, paid: true,
+  });
+});
