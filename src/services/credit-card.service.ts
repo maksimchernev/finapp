@@ -158,7 +158,7 @@ export async function updateUserCreditCard(prisma: PrismaClient, userId: string,
     && data.minPaymentAmountMinor !== null && paymentChanged;
   const priorPaymentAfterAssignment = data.minPaymentAssignmentDate && data.minPaymentAssignmentDate <= today
     && data.minPaymentDueDate && data.minPaymentDueDate < data.minPaymentAssignmentDate && paymentChanged;
-  await prisma.creditCard.update({
+  const update = {
     where: { id: cardId },
     data: {
       ...cardData(data),
@@ -166,7 +166,19 @@ export async function updateUserCreditCard(prisma: PrismaClient, userId: string,
         ? { assignmentProcessedDate: dbDate(data.minPaymentAssignmentDate) }
         : assignmentChanged || priorPaymentAfterAssignment ? { assignmentProcessedDate: null } : {}),
     },
-  });
+  };
+  const archivedPayment = existing.minPaymentDueDate && existing.minPaymentAmountMinor !== null
+    && data.minPaymentDueDate === null && data.minPaymentAssignmentDate
+    ? { dueDate: existing.minPaymentDueDate, amountMinor: existing.minPaymentAmountMinor, paid: existing.minPaymentPaid }
+    : null;
+  if (archivedPayment) {
+    await prisma.$transaction(async (tx) => {
+      await tx.creditCard.update(update);
+      await tx.creditCardMinimumPayment.create({ data: { cardId, ...archivedPayment } });
+    });
+  } else {
+    await prisma.creditCard.update(update);
+  }
   return getUserCreditCard(prisma, userId, cardId);
 }
 

@@ -48,3 +48,40 @@ test("updating a payment after the assignment date does not archive the new valu
   await updateUserCreditCard(prisma as never, "user-a", "card-a", input, "2026-09-17");
   assert.equal((updated as Record<string, unknown> | null)?.assignmentProcessedDate instanceof Date, true);
 });
+
+test("switching from a due payment to its next assignment date keeps the old payment in history", async () => {
+  const existing = {
+    id: "card-a",
+    userId: "user-a",
+    minPaymentAssignmentDate: new Date("2026-09-17T00:00:00Z"),
+    minPaymentDueDate: new Date("2026-09-25T00:00:00Z"),
+    minPaymentAmountMinor: 10000,
+    minPaymentPaid: true,
+    assignmentProcessedDate: new Date("2026-09-17T00:00:00Z"),
+  };
+  const archived: Array<Record<string, unknown>> = [];
+  let lookups = 0;
+  const database = {
+    creditCard: {
+      findFirst: async () => { lookups += 1; return lookups === 1 ? existing : null; },
+      update: async () => undefined,
+    },
+    creditCardMinimumPayment: {
+      create: async ({ data }: { data: Record<string, unknown> }) => { archived.push(data); },
+    },
+    $transaction: async (callback: (client: unknown) => Promise<unknown>) => callback(database),
+  };
+
+  await updateUserCreditCard(database as never, "user-a", "card-a", {
+    ...input,
+    minPaymentAssignmentDate: "2026-10-10",
+    minPaymentDueDate: null,
+    minPaymentAmountMinor: null,
+    minPaymentPaid: false,
+  }, "2026-09-20");
+
+  assert.equal(archived.length, 1);
+  assert.equal(archived[0].cardId, "card-a");
+  assert.equal(archived[0].amountMinor, 10000);
+  assert.equal(archived[0].paid, true);
+});
