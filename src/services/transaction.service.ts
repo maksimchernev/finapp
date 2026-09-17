@@ -11,6 +11,7 @@ export type TransactionListFilters = {
   endDate?: string;
   bankId?: string;
   categoryId?: string;
+  currency?: string;
 };
 
 export type PaginationOptions = {
@@ -37,6 +38,10 @@ export function buildUserTransactionWhere(
 
   if (filters.categoryId) {
     where.categoryId = filters.categoryId;
+  }
+
+  if (filters.currency) {
+    where.currency = filters.currency;
   }
 
   return where;

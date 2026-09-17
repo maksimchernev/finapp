@@ -22,13 +22,14 @@ function getQueryString(value: unknown) {
 export const getTransactions = async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
-    const { startDate, endDate, bankId, categoryId, limit = 20, offset = 0 } = req.query;
+    const { startDate, endDate, bankId, categoryId, currency, limit = 20, offset = 0 } = req.query;
 
     const { transactions, total } = await listUserTransactions(prisma, userId, {
       startDate: getQueryString(startDate),
       endDate: getQueryString(endDate),
       bankId: getQueryString(bankId),
       categoryId: getQueryString(categoryId),
+      currency: getQueryString(currency),
     }, {
       limit: Number(limit),
       offset: Number(offset),

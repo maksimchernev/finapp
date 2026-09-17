@@ -104,6 +104,7 @@ test("transaction list composes date, bank, and category filters", () => {
       endDate: "2026-07-08T21:00:00.000Z",
       bankId: "bank-a",
       categoryId: "category-a",
+      currency: "HUF",
     }),
     {
       userId: "user-a",
@@ -113,6 +114,7 @@ test("transaction list composes date, bank, and category filters", () => {
       },
       bankId: "bank-a",
       categoryId: "category-a",
+      currency: "HUF",
     },
   );
 });

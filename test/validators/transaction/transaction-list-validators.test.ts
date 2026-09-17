@@ -41,6 +41,7 @@ test("transaction list validators accept all supported filters", async () => {
     endDate: "2026-07-08T21:00:00.000Z",
     bankId: "bank-a",
     categoryId: "category-a",
+    currency: "HUF",
     limit: "20",
     offset: "40",
   });
@@ -67,6 +68,7 @@ test("transaction list validators enforce page and id bounds", async () => {
     { offset: "-1" },
     { bankId: "" },
     { categoryId: "" },
+    { currency: "BAD" },
   ]) {
     const response = await validate(query);
     assert.equal(response.statusCode, 400, JSON.stringify(query));
