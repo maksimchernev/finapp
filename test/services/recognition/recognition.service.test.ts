@@ -46,7 +46,7 @@ test("recognition image validation accepts only non-empty png and jpeg bodies", 
   assert.equal(validateRecognitionImage("image/jpeg", Buffer.alloc(11), 10).ok, false);
 });
 
-test("normalization drops unknown bank and category ids without inventing confidence", () => {
+test("normalization drops unknown ids and preserves the default selection", () => {
   assert.deepEqual(
     normalizeRecognitionTransactions(
       [
@@ -57,6 +57,7 @@ test("normalization drops unknown bank and category ids without inventing confid
           currency: "rub",
           date: "2026-08-31",
           merchant: "  Coffee  ",
+          selected: false,
         },
       ],
       new Set(["bank-1"]),
@@ -70,6 +71,7 @@ test("normalization drops unknown bank and category ids without inventing confid
         currency: "RUB",
         date: "2026-08-31",
         merchant: "Coffee",
+        selected: false,
       },
     ],
   );
@@ -95,6 +97,7 @@ test("OpenAI recognition sends an image with strict structured output and return
                       currency: "RUB",
                       date: "2026-08-31",
                       merchant: "Coffee",
+                      selected: true,
                     },
                   ],
                 }),
@@ -119,7 +122,22 @@ test("OpenAI recognition sends an image with strict structured output and return
 
   assert.deepEqual(result.usage, { inputTokens: 1234, outputTokens: 120 });
   assert.equal(result.transactions[0].merchant, "Coffee");
-  assert.equal(requestBody?.model, "gpt-5.6-luna");
+  assert.equal(result.transactions[0].selected, true);
+  const format = (requestBody?.text as {
+    format: {
+      schema: {
+        properties: {
+          transactions: {
+            items: { required: string[]; properties: Record<string, unknown> };
+          };
+        };
+      };
+    };
+  }).format;
+  const transactionSchema = format.schema.properties.transactions.items;
+  assert.ok(transactionSchema.required.includes("selected"));
+  assert.deepEqual(transactionSchema.properties.selected, { type: "boolean" });
+  assert.equal(requestBody?.model, "gpt-6-luna");
   assert.equal(requestBody?.store, false);
   assert.deepEqual(requestBody?.reasoning, { effort: "none" });
   assert.equal(
