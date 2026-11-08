@@ -19,6 +19,7 @@ model User {
   providerId String  @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  aiTestAccess Boolean @default(false)
 
   transactions Transaction[]
   preferences  UserPreferences?
@@ -26,6 +27,7 @@ model User {
   categories   Category[]
   creditCards  CreditCard[]
   pushSubscriptions PushSubscription[]
+  aiUsage AiUsageDaily[]
 
   @@map("users")
 }
@@ -100,12 +102,32 @@ model UserPreferences {
   userId          String   @unique
   defaultCurrency String   @default("EUR")
   budgetLimits    Json?    // { "groceries": 500, "transport": 200, ... }
+  aiRecognitionConsent Boolean?
+  recognitionMethod String @default("tesseract")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_preferences")
+}
+
+model AiUsageDaily {
+  id String @id @default(cuid())
+  userId String
+  provider String
+  day DateTime
+  inputTokens Int @default(0)
+  outputTokens Int @default(0)
+  totalTokens Int @default(0)
+  inFlight Boolean @default(false)
+  reservationExpiresAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, provider, day])
+  @@index([userId, day])
+  @@map("ai_usage_daily")
 }
 
 model CreditCard {

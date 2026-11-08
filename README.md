@@ -94,6 +94,29 @@ npm run dev
 
 Сервер запустится на `http://localhost:3001`
 
+### Распознавание Tesseract / AI
+
+Метод выбирается в профиле и сохраняется через `PATCH /api/users/preferences`
+(`recognitionMethod`: `tesseract` или `ai`, `aiRecognitionConsent`: boolean).
+Tesseract работает на устройстве. AI отправляет PNG/JPEG в OpenAI только после
+согласия в модальном окне при первом включении AI. Переключение на Tesseract
+сохраняет согласие; при следующих включениях AI повторное подтверждение не нужно.
+API не сохраняет изображение или сырой
+ответ модели, операции сохраняются отдельным запросом после проверки пользователем.
+
+Для AI задайте на backend `AI_RECOGNITION_ENABLED=true`, `OPENAI_API_KEY` и при
+необходимости `AI_DAILY_TOKEN_LIMIT` (по умолчанию 100000 входных + выходных токенов
+в сутки на аккаунт, сброс в 00:00 UTC). OpenAI API требует отдельного биллинга.
+Ключ нельзя помещать в frontend или Git. `AI_RECOGNITION_ENABLED=false` отключает
+облачные запросы, не затрагивая Tesseract.
+
+Перед запуском выполните `npm run prisma:generate` и `npx prisma migrate deploy`.
+Миграция тестового доступа допускает существующие на момент её применения
+аккаунты; новые аккаунты получают `aiTestAccess=false`.
+`GET /api/recognition/status` возвращает доступ и остаток токенов;
+`POST /api/recognition/openai` принимает изображение прямо в теле запроса с
+`Content-Type: image/png` или `image/jpeg`. Оба endpoint требуют JWT.
+
 ## 🔐 Настройка OAuth
 
 ### Google OAuth

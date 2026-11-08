@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { updateUserProfile } from '../services/user.service';
+import { getRecognitionPreferenceError } from '../services/recognition.service';
 
 const prisma = new PrismaClient();
 
@@ -40,12 +41,32 @@ export const updateProfile = async (req: Request, res: Response) => {
 export const updatePreferences = async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
-    const { defaultCurrency, budgetLimits } = req.body;
+    const { defaultCurrency, budgetLimits, recognitionMethod, aiRecognitionConsent } = req.body;
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { aiTestAccess: true } });
+    const current = await prisma.userPreferences.findUnique({ where: { userId } });
+    const consent = aiRecognitionConsent === undefined ? current?.aiRecognitionConsent : aiRecognitionConsent;
+    const error = getRecognitionPreferenceError(recognitionMethod, consent, Boolean(user?.aiTestAccess));
+    if (error) {
+      res.status(400).json({ error });
+      return;
+    }
+    if (recognitionMethod === 'ai' && (process.env.AI_RECOGNITION_ENABLED !== 'true' || !process.env.OPENAI_API_KEY)) {
+      res.status(503).json({ error: 'Облачное распознавание сейчас отключено или не настроено' });
+      return;
+    }
+    const recognitionPreferences = {
+      ...(recognitionMethod !== undefined && { recognitionMethod }),
+      ...(aiRecognitionConsent !== undefined && { aiRecognitionConsent }),
+      ...(aiRecognitionConsent === false || aiRecognitionConsent === null
+        ? { recognitionMethod: 'tesseract', aiRecognitionConsent: false }
+        : {}),
+    };
 
     const preferences = await prisma.userPreferences.upsert({
       where: { userId },
-      create: { userId, defaultCurrency, budgetLimits },
+      create: { userId, defaultCurrency, budgetLimits, ...recognitionPreferences },
       update: {
+        ...recognitionPreferences,
         ...(defaultCurrency && { defaultCurrency }),
         ...(budgetLimits && { budgetLimits }),
       },
