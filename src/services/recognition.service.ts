@@ -1,4 +1,7 @@
 import type { PrismaClient } from "@prisma/client";
+import { ProxyAgent } from "undici";
+
+let openAIProxy: ProxyAgent | undefined;
 
 export function getRecognitionPreferenceError(
   method: unknown,
@@ -141,8 +144,11 @@ export async function recognizeWithOpenAI({
   fetcher?: typeof fetch;
   image: Buffer;
 }) {
+  const proxyUrl = process.env.OPENAI_PROXY_URL?.trim();
   const response = await fetcher("https://api.openai.com/v1/responses", {
     method: "POST",
+    redirect: "error",
+    ...(proxyUrl && { dispatcher: openAIProxy ??= new ProxyAgent(proxyUrl) }),
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",

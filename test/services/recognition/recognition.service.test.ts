@@ -147,6 +147,33 @@ test("OpenAI recognition sends an image with strict structured output and return
   assert.match(JSON.stringify(requestBody?.input), /data:image\/png;base64,aW1hZ2U=/);
 });
 
+test("uses the configured proxy for the OpenAI request", async (t) => {
+  const previousProxy = process.env.OPENAI_PROXY_URL;
+  process.env.OPENAI_PROXY_URL = "http://127.0.0.1:18080";
+  t.after(() => {
+    if (previousProxy === undefined) delete process.env.OPENAI_PROXY_URL;
+    else process.env.OPENAI_PROXY_URL = previousProxy;
+  });
+
+  await recognizeWithOpenAI({
+    apiKey: "test",
+    banks: [],
+    categories: [],
+    contentType: "image/png",
+    image: Buffer.from("image"),
+    fetcher: async (url, init) => {
+      assert.equal(url, "https://api.openai.com/v1/responses");
+      assert.ok(init);
+      assert.equal(typeof Reflect.get(init, "dispatcher")?.dispatch, "function");
+      assert.equal(init.redirect, "error");
+      return Response.json({
+        output_text: JSON.stringify({ transactions: [] }),
+        usage: { input_tokens: 1, output_tokens: 1 },
+      });
+    },
+  });
+});
+
 test("invalid JSON retains actual billed usage and quota failures explain the remedy", async () => {
   const input = { apiKey: "test", banks: [], categories: [], contentType: "image/png" as const, image: Buffer.from("png") };
   await assert.rejects(recognizeWithOpenAI({ ...input, fetcher: async () => new Response(JSON.stringify({
